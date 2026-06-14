@@ -1,0 +1,3708 @@
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avadh Security | Elite Red Team Operations & Adversary Emulation</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 10L85 65H15L50 10Z' stroke='%23E4682A' stroke-width='8' stroke-linejoin='round'/%3E%3Cpath d='M50 35L70 65H30L50 35Z' fill='%23E4682A'/%3E%3Cpath d='M20 75L50 95L80 75L50 60L20 75Z' stroke='%23E4682A' stroke-width='8' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,600;0,700;0,800;0,900;1,600&family=Barlow:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css">
+
+<style>
+:root {
+  /* ════════════════════════════════════════════════════
+     LIGHT THEME — built only from the brand palette:
+       Bone   #F3F2ED   Salmon #E49A75   Orange #E4682A
+       Ink    #101A24   Periwinkle #8FA0D8
+     Muted text + borders are the ink color at low opacity.
+     ════════════════════════════════════════════════════ */
+
+  /* ─ Backgrounds ─ */
+  --bg:        #F3F2ED;   /* Bone — page background           */
+  --bg2:       #FBFAF6;   /* Lifted warm white — alt sections */
+  --bg3:       #ECEAE2;   /* Slightly deeper bone             */
+  --bg-card:   #FFFFFF;   /* Elevated card surface            */
+  --bg-card2:  #F7F6F1;   /* Nested / deeper card             */
+
+  /* ─ Accent: Avadh Signal Orange ─ */
+  --red:       #E4682A;   /* Brand orange (palette)           */
+  --red-dim:   rgba(228,104,42,0.12);
+  --red-glow:  rgba(228,104,42,0.32);
+
+  /* ─ Secondary accents ─ */
+  --blue:      #8FA0D8;   /* Periwinkle (palette)             */
+  --blue-dim:  rgba(143,160,216,0.16);
+  --green:     #8FA0D8;   /* (no green in palette → periwinkle) */
+  --salmon:    #E49A75;   /* Salmon (palette)                 */
+  --salmon-dim:rgba(228,154,117,0.16);
+
+  /* ─ Text: ink at varying strength ─ */
+  --text:      #101A24;   /* Ink — primary text               */
+  --text2:     rgba(16,26,36,0.68);  /* Muted body            */
+  --text3:     rgba(16,26,36,0.45);  /* Meta / disabled       */
+
+  /* ─ Borders: ink at low opacity ─ */
+  --border:    rgba(16,26,36,0.10);
+  --border2:   rgba(16,26,36,0.18);
+
+  --mono:      'JetBrains Mono', monospace;
+  --head:      'Barlow Condensed', sans-serif;
+  --body:      'Barlow', sans-serif;
+  --r:         16px;
+  --r-lg:      24px;
+
+  /* ─ Announcement banner height (set to 0 when dismissed) ─ */
+  --banner-h:  44px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; overflow-x: clip; }
+
+body {
+  background:
+    radial-gradient(820px 580px at 88% -8%, rgba(143,160,216,0.30), transparent 62%),
+    radial-gradient(760px 560px at -8% 112%, rgba(228,154,117,0.16), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ─── NOISE + GRID OVERLAY ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(16,26,36,0.030) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16,26,36,0.030) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── TOP ANNOUNCEMENT BANNER ─── */
+.top-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--banner-h);
+  z-index: 200;                 /* above nav */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 52px;              /* room for the close button */
+  background: linear-gradient(90deg, #D2551A 0%, #E4682A 46%, #E4682A 100%);
+  color: #101A24;
+  overflow: hidden;
+  box-shadow: 0 2px 20px rgba(228,104,42,0.32);
+  transition: transform 0.45s cubic-bezier(.4,0,.2,1);
+}
+
+/* moving sheen */
+.top-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 32%, rgba(255,255,255,0.30) 50%, transparent 68%);
+  transform: translateX(-130%);
+  animation: bannerSheen 7.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes bannerSheen {
+  0%, 18%   { transform: translateX(-130%); }
+  60%, 100% { transform: translateX(130%); }
+}
+
+.banner-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-width: 0;
+}
+
+.banner-msg {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 11px);
+  opacity: 0;
+  white-space: nowrap;
+  font-family: var(--body);
+  font-weight: 600;
+  font-size: 0.86rem;
+  letter-spacing: 0.005em;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  pointer-events: none;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.banner-msg .b-emoji { font-size: 1.02rem; line-height: 1; }
+.banner-msg.active {
+  position: relative;
+  left: auto;
+  transform: translate(0, 0);
+  opacity: 1;
+}
+
+.banner-close {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px; height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16,26,36,0.10);
+  border: 1px solid rgba(16,26,36,0.28);
+  border-radius: 7px;
+  color: #101A24;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.2s, transform 0.2s, border-color 0.2s;
+}
+.banner-close:hover {
+  background: rgba(16,26,36,0.20);
+  border-color: rgba(16,26,36,0.45);
+  transform: translateY(-50%) scale(1.08);
+}
+.banner-close svg { width: 13px; height: 13px; display: block; }
+
+/* Dismissed state: collapse height so nav rises to the top, slide banner away */
+body.banner-dismissed { --banner-h: 0px; }
+body.banner-dismissed .top-banner {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+/* ─── NAV ─── */
+nav {
+  position: fixed;
+  top: var(--banner-h); left: 0; right: 0;
+  transition: top 0.45s cubic-bezier(.4,0,.2,1),
+              background 0.4s ease,
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
+  z-index: 100;
+  padding: 0 48px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Cool periwinkle frosted surface — distinct from the bone page and a
+     deliberate counterweight to the orange banner/CTA. */
+  background: rgba(231,234,247,0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(143,160,216,0.32);
+  box-shadow: 0 6px 24px rgba(16,26,36,0.06);
+}
+
+/* Scrolled state: nav transitions to solid periwinkle #8FA0D8.
+   Toggled by a scroll listener that adds the .scrolled class; the
+   transition above animates the recolor smoothly. */
+nav.scrolled {
+  background: rgba(16,26,36,0.96);
+  border-bottom-color: rgba(255,255,255,0.10);
+  box-shadow: 0 10px 34px rgba(16,26,36,0.45);
+}
+/* On the dark scrolled bar, switch text + marks to light for contrast */
+nav.scrolled .nav-logo { color: #F3F2ED; }
+nav.scrolled .nav-links a,
+nav.scrolled .nav-link-top { color: rgba(243,242,237,0.78); }
+nav.scrolled .nav-links a:hover,
+nav.scrolled .nav-link-top:hover { color: #FFFFFF; }
+nav.scrolled .nav-link-top .caret { opacity: 0.85; }
+nav.scrolled .nav-toggler { border-color: rgba(243,242,237,0.30); }
+nav.scrolled .nav-toggler span { background: #F3F2ED; }
+/* underline stays orange on dark scrolled bar — already on-brand */
+
+.nav-logo {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 1.45rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-logo svg {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 7px rgba(228,104,42,0.45));
+  transition: filter 0.25s;
+}
+.nav-logo:hover svg {
+  filter: drop-shadow(0 0 14px rgba(228,104,42,0.70));
+}
+.nav-logo img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(240,90,26,0.45));
+}
+.nav-logo span { color: var(--red); }
+
+.nav-links {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+  align-items: center;
+}
+.nav-links > li { position: relative; }
+.nav-links a {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--text2);
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.22s ease;
+  padding-bottom: 3px;
+  position: relative;
+}
+/* Animated underline — orange, slides in from left */
+.nav-links > li > a::after,
+.nav-links > li > .nav-link-top::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -2px;
+  width: 100%; height: 1.5px;
+  background: linear-gradient(90deg, var(--red), rgba(228,104,42,0.4));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+}
+.nav-links > li > a:hover::after,
+.nav-links > li > a:focus::after,
+.nav-links > li.has-dropdown:hover .nav-link-top::after,
+.nav-links > li.has-dropdown:focus-within .nav-link-top::after {
+  transform: scaleX(1);
+}
+.nav-links a:hover,
+.nav-links a:focus { color: var(--text); }
+
+
+/* ── Pentest dropdown ── */
+.nav-link-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.nav-link-top .caret {
+  width: 11px; height: 11px;
+  opacity: 0.65;
+  transition: transform 0.25s ease, opacity 0.2s;
+}
+.nav-item.has-dropdown:hover .nav-link-top,
+.nav-item.has-dropdown:focus-within .nav-link-top { color: var(--text); }
+.nav-item.has-dropdown:hover .caret,
+.nav-item.has-dropdown:focus-within .caret { transform: rotate(180deg); opacity: 1; }
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  min-width: 210px;
+  /* Dark ink glass — contrasts with the light nav, reads premium */
+  background: linear-gradient(145deg, rgba(16,26,36,0.97) 0%, rgba(22,34,50,0.98) 100%);
+  border: 1px solid rgba(228,104,42,0.22);
+  border-radius: 18px;
+  padding: 5px;
+  box-shadow:
+    0 24px 56px rgba(16,26,36,0.40),
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 0 40px rgba(228,104,42,0.08);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.24s ease, transform 0.24s cubic-bezier(.22,.7,.2,1), visibility 0.24s;
+  z-index: 130;
+  /* subtle top-edge highlight */
+  backdrop-filter: blur(20px);
+}
+/* Thin orange top-border accent line */
+.nav-dropdown::after {
+  content: '';
+  position: absolute;
+  top: -1px; left: 16px; right: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(228,104,42,0.70) 40%, rgba(228,104,42,0.70) 60%, transparent);
+  border-radius: 2px;
+}
+/* invisible bridge so the menu doesn't close in the gap */
+.nav-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -18px; left: 0; right: 0;
+  height: 18px;
+}
+.nav-item.has-dropdown:hover .nav-dropdown,
+.nav-item.has-dropdown:focus-within .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+.nav-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-family: var(--body);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  color: rgba(243,242,237,0.78);
+  border: 1px solid transparent;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, box-shadow 0.18s;
+  position: relative;
+}
+.nav-dropdown a:hover {
+  background: rgba(228,104,42,0.10);
+  border-color: rgba(228,104,42,0.22);
+  color: #F3F2ED;
+  box-shadow: 0 0 18px rgba(228,104,42,0.08) inset;
+}
+/* Tiny label tag to the right of each item */
+.dd-label {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(228,104,42,0.55);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.nav-dropdown a:hover .dd-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.dd-ico {
+  width: 26px; height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(143,160,216,0.12);
+  color: rgba(143,160,216,0.90);
+  border: 1px solid rgba(143,160,216,0.25);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, box-shadow 0.18s;
+}
+.dd-ico svg { width: 13px; height: 13px; }
+.nav-dropdown a:hover .dd-ico {
+  background: rgba(228,104,42,0.18);
+  border-color: rgba(228,104,42,0.42);
+  color: #E4682A;
+  box-shadow: 0 0 12px rgba(228,104,42,0.20);
+}
+/* Divider rule between items */
+.nav-dropdown a + a {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-radius: 0 0 11px 11px;
+}
+.nav-dropdown a:first-of-type {
+  border-radius: 11px 11px 0 0;
+}
+.nav-dropdown a:last-of-type {
+  border-radius: 0 0 11px 11px;
+}
+/* Hover removes the hairline so the filled border takes over cleanly */
+.nav-dropdown a:hover + a { border-top-color: transparent; }
+
+.nav-cta {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 10px 22px;
+  border-radius: 10px;
+  background: var(--red);
+  color: #fff;
+  text-decoration: none;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.nav-cta:hover { opacity: 0.88; box-shadow: 0 0 22px var(--red-glow); }
+
+/* ─── SECTION WRAPPER ─── */
+section { position: relative; z-index: 1; border-top: 1px solid var(--border); }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 40px; position: relative; z-index: 1; }
+
+/* ─── HERO ─── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+}
+
+.hero-inner {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 140px 40px 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-left, .hero-right { display: contents; }
+
+/* orb ambient */
+.hero-orb {
+  position: absolute;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(228,104,42,0.10) 0%, transparent 65%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero-orb2 {
+  position: absolute;
+  width: 460px; height: 460px;
+  background: radial-gradient(circle, rgba(143,160,216,0.22) 0%, transparent 70%);
+  top: 30px; left: -110px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero-tag { display: none; }  /* eyebrow removed */
+
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.hero-headline {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: clamp(3.2rem, 7.5vw, 6.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 32px;
+  animation: fadeUp 0.7s 0.25s both;
+}
+
+.hero-headline .glitch-wrap {
+  display: block;
+  position: relative;
+}
+
+.glitch {
+  position: relative;
+  display: inline-block;
+}
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.glitch::before {
+  color: var(--red);
+  animation: glitch1 4s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+.glitch::after {
+  color: var(--blue);
+  animation: glitch2 4s infinite;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+
+@keyframes glitch1 {
+  0%,88%,100% { transform: translate(0); opacity: 0; }
+  90% { transform: translate(-3px, 1px); opacity: 0.8; }
+  92% { transform: translate(3px, -1px); opacity: 0.8; }
+  94% { transform: translate(0); opacity: 0; }
+}
+@keyframes glitch2 {
+  0%,88%,100% { transform: translate(0); opacity: 0; }
+  91% { transform: translate(3px, 2px); opacity: 0.6; }
+  93% { transform: translate(-3px, -2px); opacity: 0.6; }
+  95% { transform: translate(0); opacity: 0; }
+}
+
+.hero-headline .accent { color: var(--red); }
+
+/* Rotating specializations */
+.hero-specials {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em;
+  font-family: var(--body);
+  font-weight: 400;
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  letter-spacing: 0.01em;
+  color: var(--text2);
+  margin-bottom: 18px;
+  animation: fadeUp 0.7s 0.38s both;
+  line-height: 1.5;
+}
+.hero-specials .prefix { color: var(--text2); }
+
+/* Masked viewport for the slot-machine slide */
+.spec-rotate {
+  position: relative;
+  display: inline-block;
+  height: 1.5em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.spec-word {
+  position: absolute;
+  left: 0; top: 0;
+  height: 1.5em;
+  line-height: 1.5em;
+  white-space: nowrap;
+  color: var(--red);
+  font-family: var(--head);
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  opacity: 0;
+  transform: translateY(115%);
+  transition: transform 0.55s cubic-bezier(.22,.7,.2,1), opacity 0.45s ease;
+}
+/* The visible word sits in flow so the box hugs its width */
+.spec-word.active {
+  position: relative;
+  opacity: 1;
+  transform: translateY(0);
+}
+/* The outgoing word slides up and out */
+.spec-word.exit {
+  opacity: 0;
+  transform: translateY(-115%);
+}
+/* Blinking terminal cursor trailing the active word */
+.spec-word.active::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 5px;
+  vertical-align: -0.12em;
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(228,104,42,0.5);
+  animation: caretBlink 1.05s steps(1) infinite;
+}
+@keyframes caretBlink {
+  0%, 50%      { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.hero-desc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 44px;
+  animation: fadeUp 0.7s 0.45s both;
+  position: relative;
+}
+.hero-desc-inner {
+  display: inline-flex;
+  align-items: stretch;
+  background: #101A24;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(228,104,42,0.22),
+    0 8px 32px rgba(16,26,36,0.18),
+    0 0 60px rgba(228,104,42,0.06);
+}
+.hero-desc-bar {
+  width: 4px;
+  background: linear-gradient(180deg, #E4682A 0%, #D2551A 100%);
+  flex-shrink: 0;
+}
+.hero-desc-body {
+  padding: 13px 22px 13px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hero-desc-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(228,104,42,0.85);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.hero-desc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #E4682A;
+  box-shadow: 0 0 8px rgba(228,104,42,0.80);
+  animation: threatPulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes threatPulse {
+  0%, 100% { opacity: 1;  box-shadow: 0 0 8px rgba(228,104,42,0.80); }
+  50%       { opacity: 0.35; box-shadow: 0 0 3px rgba(228,104,42,0.30); }
+}
+.hero-desc-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(243,242,237,0.14);
+  flex-shrink: 0;
+}
+.hero-desc-text {
+  font-family: var(--body);
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: rgba(243,242,237,0.72);
+  white-space: nowrap;
+}
+.hero-desc-text strong {
+  font-weight: 700;
+  color: #E4682A;
+  font-family: var(--head);
+  font-size: 1.02rem;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 18px rgba(228,104,42,0.40);
+}
+@media (max-width: 767px) {
+  .hero-desc-text { white-space: normal; }
+  .hero-desc-body { gap: 8px; }
+}
+/* Bootstrap-style fade-in entrance */
+.hero-desc.bs-fade-up { opacity: 0; transform: translateY(10px); transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.3,0.5,1); }
+.hero-desc.bs-fade-up.show { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .hero-desc.bs-fade-up { transition: none; transform: none; opacity: 1; } }
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.7s 0.55s both;
+}
+
+/* scroll indicator */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--body);
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 16px 36px;
+  border-radius: var(--r);
+  background: var(--red);
+  color: #fff;
+  text-decoration: none;
+  transition: box-shadow 0.25s, transform 0.2s, opacity 0.2s;
+}
+.btn-primary:hover { box-shadow: 0 0 36px var(--red-glow); transform: translateY(-2px); opacity: 0.92; }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--body);
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 16px 36px;
+  border-radius: var(--r);
+  border: 1px solid rgba(143,160,216,0.55);
+  background: rgba(143,160,216,0.08);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.btn-ghost:hover { border-color: rgba(143,160,216,0.9); background: rgba(143,160,216,0.16); }
+
+/* ─── TRUSTED-BY / LOGO MARQUEE ─── */
+#trusted {
+  padding: 100px 0;
+  overflow: hidden;
+}
+.trusted-heading {
+  text-align: center;
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: clamp(2rem, 4.2vw, 2.75rem);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  max-width: 880px;
+  margin: 0 auto 48px;
+  line-height: 1.18;
+}
+.trusted-heading .accent { color: var(--red); font-weight: 700; }
+
+/* Marquee viewport with faded edges */
+.marquee {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 11%, #000 89%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 11%, #000 89%, transparent 100%);
+}
+.marquee-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: 76px;
+  animation: marqueeScroll 32s linear infinite;
+}
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+.logo-item {
+  flex-shrink: 0;
+  transition: color 0.25s, opacity 0.25s, transform 0.25s, filter 0.25s;
+}
+
+/* Image logos — uniform-height logo-wall treatment.
+   Muted by default, full color on hover. If a brand's guidelines
+   require unaltered full-color logos, remove the grayscale filter. */
+img.logo-item {
+  height: 38px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+img.logo-item:hover {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* Text fallback wordmark (shown until a real logo file loads) */
+.logo-text {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 1.9rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(16,26,36,0.40);
+  white-space: nowrap;
+}
+.logo-text:hover {
+  color: var(--red);
+  transform: translateY(-2px);
+}
+
+@keyframes marqueeScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; flex-wrap: wrap; justify-content: center; row-gap: 28px; }
+  .marquee { -webkit-mask-image: none; mask-image: none; }
+}
+@media (max-width: 640px) {
+  .logo-text { font-size: 1.4rem; }
+  img.logo-item { height: 30px; }
+  .marquee-track { gap: 52px; }
+}
+
+/* ─── SERVICES ─── */
+#services {
+  padding: 120px 0;
+  background:
+    linear-gradient(180deg, rgba(240,90,26,0.05) 0%, transparent 30%, rgba(30,58,110,0.08) 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 56px,
+      rgba(255,255,255,0.018) 56px,
+      rgba(255,255,255,0.018) 57px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 56px,
+      rgba(255,255,255,0.018) 56px,
+      rgba(255,255,255,0.018) 57px
+    ),
+    #0F2040;
+  overflow: hidden;
+}
+
+/* Blazing orange top-center beam */
+#services::before {
+  content: '';
+  position: absolute;
+  width: 900px; height: 360px;
+  background: radial-gradient(ellipse, rgba(240,90,26,0.18) 0%, transparent 60%);
+  top: -80px; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+/* Navy ambient bottom-right */
+#services::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(30,58,110,0.18) 0%, transparent 65%);
+  bottom: -60px; right: -80px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.section-tag {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-tag::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--red);
+}
+
+.section-heading {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+
+.section-sub {
+  font-size: 1rem;
+  color: var(--text2);
+  max-width: 580px;
+  line-height: 1.75;
+  margin-bottom: 64px;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+/* ── SERVICE CARD REDESIGN ── */
+.service-card {
+  --ca: var(--red);
+  --ca-dim: rgba(224,90,30,0.12);
+  --ca-glow: rgba(224,90,30,0.40);
+  background: linear-gradient(145deg, #172B55 0%, #0F2040 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-top: none;
+  border-radius: var(--r-lg);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  cursor: default;
+  transition: transform 0.32s cubic-bezier(.22,.68,0,1.2), box-shadow 0.32s, border-color 0.3s;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+/* Colored top accent bar */
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--ca) 40%, var(--ca) 60%, transparent 100%);
+  transition: opacity 0.3s, filter 0.3s;
+  opacity: 0.80;
+  z-index: 2;
+}
+
+/* Scan line hover sweep */
+.service-card::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: -100%;
+  height: 60%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.032) 0%, transparent 100%);
+  transition: top 0.45s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.service-card:hover::before {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px var(--ca));
+}
+.service-card:hover::after { top: 100%; }
+.service-card:hover {
+  transform: translateY(-7px);
+  border-color: color-mix(in srgb, var(--ca) 40%, transparent);
+  box-shadow:
+    0 28px 56px rgba(0,0,0,0.55),
+    0 0 0 1px color-mix(in srgb, var(--ca) 25%, transparent),
+    inset 0 0 48px color-mix(in srgb, var(--ca) 6%, transparent);
+}
+
+/* Per-card accent colors */
+.service-card[data-service="01"] { --ca: #F05A1A; --ca-dim: rgba(240,90,26,0.13); --ca-glow: rgba(240,90,26,0.35); }
+.service-card[data-service="02"] { --ca: #3b82f6; --ca-dim: rgba(59,130,246,0.13); --ca-glow: rgba(59,130,246,0.35); }
+.service-card[data-service="03"] { --ca: #F05A1A; --ca-dim: rgba(240,90,26,0.13); --ca-glow: rgba(240,90,26,0.35); }
+.service-card[data-service="04"] { --ca: #3b82f6; --ca-dim: rgba(59,130,246,0.13); --ca-glow: rgba(59,130,246,0.35); }
+.service-card[data-service="05"] { --ca: #38bdf8; --ca-dim: rgba(56,189,248,0.13); --ca-glow: rgba(56,189,248,0.35); }
+.service-card[data-service="06"] { --ca: #38bdf8; --ca-dim: rgba(56,189,248,0.13); --ca-glow: rgba(56,189,248,0.35); }
+
+/* Inner padding wrapper */
+.sc-inner {
+  padding: 22px 26px 22px;
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Ghost number watermark */
+.sc-watermark {
+  position: absolute;
+  bottom: -18px; right: 10px;
+  font-family: var(--head);
+  font-weight: 900;
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--ca);
+  opacity: 0.06;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.3s;
+  letter-spacing: -0.03em;
+}
+.service-card:hover .sc-watermark { opacity: 0.13; }
+
+/* Category header row */
+.sc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.sc-category {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: var(--ca);
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.sc-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ca);
+  box-shadow: 0 0 8px var(--ca);
+  animation: pulse 2s infinite;
+}
+
+/* Icon — left column */
+.sc-icon-wrap {
+  width: 48px; height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: var(--ca-dim);
+  border: 1px solid color-mix(in srgb, var(--ca) 32%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  position: relative;
+  transition: box-shadow 0.3s, border-color 0.3s, background 0.3s;
+  flex-shrink: 0;
+}
+.service-card:hover .sc-icon-wrap {
+  box-shadow: 0 0 20px var(--ca-glow);
+  border-color: color-mix(in srgb, var(--ca) 55%, transparent);
+  background: color-mix(in srgb, var(--ca) 18%, transparent);
+}
+
+/* Vertical divider between icon and text */
+.sc-divider {
+  width: 1px;
+  align-self: stretch;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ca) 45%, transparent) 50%, transparent);
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+/* Text column */
+.sc-text { flex: 1; min-width: 0; }
+
+.sc-title {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 1.08rem;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+
+.sc-desc {
+  font-size: 0.80rem;
+  color: var(--text2);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sc-footer { display: none; }
+
+
+/* ─── ENGAGEMENT MODELS ─── */
+#engagement {
+  padding: 120px 0;
+  background:
+    linear-gradient(135deg,
+      rgba(30,58,110,0.10) 0%,
+      transparent 40%,
+      rgba(240,90,26,0.06) 80%,
+      transparent 100%
+    ),
+    repeating-linear-gradient(
+      -55deg,
+      transparent,
+      transparent 36px,
+      rgba(255,255,255,0.014) 36px,
+      rgba(255,255,255,0.014) 37px
+    ),
+    #0A1628;
+  overflow: hidden;
+}
+
+/* Navy sweep top-left */
+#engagement::before {
+  content: '';
+  position: absolute;
+  width: 700px; height: 500px;
+  background: radial-gradient(ellipse, rgba(30,58,110,0.18) 0%, transparent 62%);
+  top: -120px; left: -100px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Orange horizon — bottom-right */
+#engagement::after {
+  content: '';
+  position: absolute;
+  width: 600px; height: 400px;
+  background: radial-gradient(ellipse, rgba(240,90,26,0.12) 0%, transparent 62%);
+  bottom: -80px; right: -60px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.engagement-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 56px;
+}
+
+/* Base card */
+.eng-card {
+  background: linear-gradient(160deg, #172B55 0%, #0F2040 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-left: 3px solid var(--eng-color, rgba(255,255,255,0.15));
+  border-radius: var(--r-lg);
+  padding: 28px 24px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 6px 32px rgba(0,0,0,0.5);
+}
+
+/* Per-card color accent (CSS custom property driven) */
+.eng-card:nth-child(1) { --eng-color: #f59e0b; --eng-dim: rgba(245,158,11,0.09); --eng-glow: rgba(245,158,11,0.3); }
+.eng-card:nth-child(2) { --eng-color: #F05A1A; --eng-dim: rgba(240,90,26,0.09); --eng-glow: rgba(240,90,26,0.3); }
+.eng-card:nth-child(3) { --eng-color: #3b82f6; --eng-dim: rgba(59,130,246,0.09); --eng-glow: rgba(59,130,246,0.3); }
+.eng-card:nth-child(4) { --eng-color: #06b6d4; --eng-dim: rgba(6,182,212,0.09); --eng-glow: rgba(6,182,212,0.3); }
+
+/* Ambient color bleed behind each card */
+.eng-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, var(--eng-dim) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s;
+  opacity: 0.7;
+}
+
+.eng-card.popular {
+  border-color: rgba(255,255,255,0.14);
+  border-left-color: var(--eng-color);
+  background: linear-gradient(160deg, #1E3A6E 0%, #172B55 100%);
+}
+.eng-card.popular::after {
+  content: 'Most Popular';
+  position: absolute;
+  top: 16px; right: 16px;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--eng-color);
+  background: var(--eng-dim);
+  border: 1px solid color-mix(in srgb, var(--eng-color) 35%, transparent);
+  border-radius: 6px;
+  padding: 4px 8px;
+  z-index: 2;
+}
+
+.eng-card:hover {
+  border-color: rgba(255,255,255,0.18);
+  border-left-color: var(--eng-color);
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 48px rgba(0,0,0,0.55),
+    0 0 0 1px color-mix(in srgb, var(--eng-color) 22%, transparent);
+}
+.eng-card:hover::before { opacity: 1; }
+
+.eng-duration {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--eng-color);
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+  padding: 5px 12px;
+  background: var(--eng-dim);
+  border: 1px solid color-mix(in srgb, var(--eng-color) 28%, transparent);
+  border-radius: 8px;
+  display: inline-block;
+  position: relative;
+  z-index: 1;
+}
+
+.eng-title {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.eng-desc {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.eng-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+}
+.eng-features li {
+  font-size: 0.8rem;
+  color: var(--text2);
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.eng-features li::before {
+  content: '→';
+  color: var(--eng-color);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ─── CREDIBILITY ─── */
+#credibility {
+  padding: 120px 0;
+  background:
+    linear-gradient(180deg,
+      rgba(240,90,26,0.07) 0%,
+      transparent 25%,
+      transparent 75%,
+      rgba(30,58,110,0.08) 100%
+    ),
+    radial-gradient(ellipse at 50% 100%, rgba(240,90,26,0.08) 0%, transparent 55%),
+    repeating-linear-gradient(60deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,0.016) 40px,
+      rgba(255,255,255,0.016) 41px
+    ),
+    #0F2040;
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, transparent 0%, rgba(240,90,26,0.55) 30%, rgba(240,90,26,0.55) 70%, transparent 100%) 1;
+  overflow: hidden;
+}
+
+/* Strong orange warmth from top-left — authority  */
+#credibility::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 500px;
+  background: radial-gradient(ellipse, rgba(240,90,26,0.14) 0%, transparent 60%);
+  top: -80px; left: -60px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Navy cool from bottom-right */
+#credibility::after {
+  content: '';
+  position: absolute;
+  width: 480px; height: 480px;
+  background: radial-gradient(circle, rgba(30,58,110,0.18) 0%, transparent 62%);
+  bottom: -60px; right: -60px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cred-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+/* Cert cards — 3-column grid */
+.certs-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.cert-item {
+  background: linear-gradient(145deg, #1E3A6E 0%, #172B55 100%);
+  border: 1px solid rgba(240,90,26,0.22);
+  border-top: 2px solid rgba(240,90,26,0.50);
+  border-radius: var(--r-lg);
+  padding: 28px 16px;
+  text-align: center;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.cert-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(240,90,26,0.10) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cert-item:hover {
+  border-color: rgba(240,90,26,0.55);
+  border-top-color: rgba(240,90,26,0.85);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5), 0 0 24px rgba(240,90,26,0.18);
+}
+
+.cert-badge {
+  font-family: var(--mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 10px;
+  text-shadow: 0 0 16px rgba(240,90,26,0.6);
+  position: relative;
+  z-index: 1;
+}
+
+.cert-name { display: none; }
+
+.cert-desc {
+  font-size: 0.73rem;
+  color: var(--text2);
+  line-height: 1.55;
+  position: relative;
+  z-index: 1;
+}
+
+/* Founder quote */
+.founder-quote {
+  position: relative;
+  background: linear-gradient(145deg, #1E3A6E 0%, #172B55 100%);
+  border: 1px solid rgba(240,90,26,0.28);
+  border-left: 3px solid rgba(240,90,26,0.70);
+  border-radius: var(--r-lg);
+  padding: 32px 32px 32px 32px;
+  margin-top: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 0 40px rgba(240,90,26,0.03);
+}
+.founder-quote::before {
+  content: '"';
+  font-family: Georgia, serif;
+  font-size: 5.5rem;
+  color: var(--red);
+  line-height: 1;
+  position: absolute;
+  top: 6px; left: 18px;
+  opacity: 0.35;
+}
+.founder-quote p {
+  font-size: 0.95rem;
+  color: var(--text2);
+  line-height: 1.8;
+  font-style: italic;
+  padding-left: 20px;
+}
+.founder-attr {
+  margin-top: 16px;
+  padding-left: 20px;
+  font-style: normal;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.founder-attr span { color: var(--red); }
+
+/* Stats — horizontal rows */
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #1E3A6E 0%, #172B55 100%);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-left: 3px solid;
+  border-radius: var(--r-lg);
+  padding: 22px 26px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 0% 50%, var(--sc-dim) 0%, transparent 60%);
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.3s;
+}
+.stat-card:hover::before { opacity: 1; }
+
+/* Each stat card gets a distinct left border + number color */
+.stat-card:nth-child(1) { border-left-color: #F05A1A; --sc-dim: rgba(240,90,26,0.08); }
+.stat-card:nth-child(2) { border-left-color: #f59e0b; --sc-dim: rgba(245,158,11,0.08); }
+.stat-card:nth-child(3) { border-left-color: #22c55e; --sc-dim: rgba(34,197,94,0.08); }
+.stat-card:nth-child(4) { border-left-color: #3b82f6; --sc-dim: rgba(59,130,246,0.08); }
+
+.stat-card:nth-child(1) .stat-number { color: #F05A1A; text-shadow: 0 0 20px rgba(240,90,26,0.55); }
+.stat-card:nth-child(2) .stat-number { color: #f59e0b; text-shadow: 0 0 20px rgba(245,158,11,0.55); }
+.stat-card:nth-child(3) .stat-number { color: #22c55e; text-shadow: 0 0 20px rgba(34,197,94,0.55); }
+.stat-card:nth-child(4) .stat-number { color: #3b82f6; text-shadow: 0 0 20px rgba(59,130,246,0.55); }
+
+.stat-card:hover {
+  border-color: rgba(255,255,255,0.18);
+  transform: translateX(4px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
+
+.stat-number {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1.85rem;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+.stat-label {
+  font-size: 0.82rem;
+  color: var(--text2);
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── CTA ─── */
+#cta {
+  padding: 100px 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+#cta::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(240,90,26,0.13) 0%, transparent 70%);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cta-inner {
+  position: relative;
+  z-index: 1;
+}
+
+.cta-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.cta-label::before, .cta-label::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--red);
+  opacity: 0.5;
+}
+
+.cta-heading {
+  font-family: var(--head);
+  font-weight: 900;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+
+.cta-sub-heading {
+  font-family: var(--head);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  color: var(--text2);
+  margin-bottom: 24px;
+}
+
+.cta-desc {
+  font-size: 0.95rem;
+  color: var(--text2);
+  max-width: 520px;
+  margin: 0 auto 48px;
+  line-height: 1.8;
+}
+
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cta-input-row {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  max-width: 480px;
+  margin: 0 auto 48px;
+}
+.cta-input {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border2);
+  border-right: none;
+  border-radius: var(--r) 0 0 var(--r);
+  padding: 14px 20px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cta-input:focus { border-color: var(--red); }
+.cta-input::placeholder { color: var(--text3); }
+
+.cta-input-btn {
+  background: var(--red);
+  border: 1px solid var(--red);
+  border-radius: 0 var(--r) var(--r) 0;
+  padding: 14px 24px;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.cta-input-btn:hover { box-shadow: 0 0 24px var(--red-glow); }
+
+/* ─── CONTACT FORM ─── */
+.contact-form-wrap {
+  max-width: 680px;
+  margin: 0 auto 48px;
+}
+
+.contact-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.contact-field.full { grid-column: 1 / -1; }
+
+.contact-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.16em;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.contact-input,
+.contact-select,
+.contact-textarea {
+  background: rgba(30,58,110,0.55);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 13px 17px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.22s, box-shadow 0.22s, background 0.22s;
+  width: 100%;
+}
+.contact-input::placeholder,
+.contact-textarea::placeholder { color: var(--text3); }
+.contact-input:focus,
+.contact-select:focus,
+.contact-textarea:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(240,90,26,0.14);
+  background: rgba(30,58,110,0.8);
+}
+
+.contact-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8F9C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+  cursor: pointer;
+}
+.contact-select option {
+  background: #0F2040;
+  color: var(--text);
+}
+
+.contact-textarea {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.65;
+}
+
+.contact-submit {
+  width: 100%;
+  margin-top: 6px;
+  padding: 15px 28px;
+  background: var(--red);
+  border: none;
+  border-radius: var(--r);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: box-shadow 0.25s, transform 0.2s, opacity 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.contact-submit:hover:not(:disabled) {
+  box-shadow: 0 0 36px var(--red-glow);
+  transform: translateY(-2px);
+}
+.contact-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.contact-submit .btn-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: none;
+}
+.contact-submit.loading .btn-spinner { display: block; }
+.contact-submit.loading .btn-label { opacity: 0; position: absolute; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast-style state messages */
+.form-state {
+  display: none;
+  margin-top: 20px;
+  padding: 16px 22px;
+  border-radius: 12px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  align-items: center;
+  gap: 12px;
+}
+.form-state.success {
+  background: rgba(34,197,94,0.1);
+  border: 1px solid rgba(34,197,94,0.3);
+  color: #4ade80;
+}
+.form-state.error {
+  background: rgba(240,90,26,0.1);
+  border: 1px solid rgba(240,90,26,0.3);
+  color: #fb923c;
+}
+.form-state.active { display: flex; }
+
+/* Divider between form and direct-contact row */
+.cta-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 680px;
+  margin: 0 auto 32px;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.cta-divider::before,
+.cta-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+@media (max-width: 640px) {
+  .contact-form-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+}
+
+.footer-logo {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.footer-logo svg {
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 5px rgba(255,107,44,0.4));
+}
+.footer-logo span { color: var(--red); }
+
+.footer-copy {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text2);
+  letter-spacing: 0.08em;
+}
+
+/* ─── SCROLL REVEAL ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.65s, transform 0.65s;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .engagement-grid { grid-template-columns: 1fr 1fr; }
+  .services-grid { grid-template-columns: 1fr; }
+  .cred-grid { grid-template-columns: 1fr; gap: 48px; }
+}
+
+@media (max-width: 640px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .container { padding: 0 20px; }
+  .hero-inner { padding: 140px 20px 80px; }
+  .engagement-grid { grid-template-columns: 1fr; }
+  .services-grid { grid-template-columns: 1fr; }
+  .certs-row { grid-template-columns: 1fr 1fr; }
+
+  /* Banner: allow two-line wrap, smaller text */
+  :root { --banner-h: 56px; }
+  .top-banner { padding: 0 42px 0 14px; }
+  .banner-msg {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.22;
+    font-size: 0.72rem;
+    max-width: 100%;
+  }
+  .banner-close { right: 10px; width: 24px; height: 24px; }
+}
+
+/* ─── BOOTSTRAP ANIMATION ENHANCEMENTS ─── */
+/* Staggered fade-in for Bootstrap carousel-like entrance */
+.eng-card { animation-fill-mode: both; }
+.eng-card:nth-child(1) { animation-delay: 0.0s; }
+.eng-card:nth-child(2) { animation-delay: 0.08s; }
+.eng-card:nth-child(3) { animation-delay: 0.16s; }
+.eng-card:nth-child(4) { animation-delay: 0.24s; }
+
+/* Tooltip-style tag on service cards */
+.sc-category { cursor: default; }
+
+/* Bootstrap badge integration for cert items */
+.cert-badge-bs {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--red);
+  font-family: var(--mono);
+  text-shadow: 0 0 16px rgba(240,90,26,0.6);
+}
+
+/* ─── MOBILE NAV HAMBURGER ─── */
+.nav-toggler {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(16,26,36,0.20);
+  border-radius: 8px;
+  padding: 7px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-direction: column;
+  gap: 5px;
+}
+.nav-toggler span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: all 0.25s;
+}
+@media (max-width: 640px) {
+  .nav-toggler { display: flex; }
+  .nav-links { display: none !important; }
+}
+
+/* ─── OFFCANVAS NAV OVERRIDES ─── */
+.offcanvas.offcanvas-end {
+  background: #EEF0FA !important;
+  border-left: 1px solid rgba(143,160,216,0.35) !important;
+  width: 280px !important;
+}
+.offcanvas-header {
+  border-bottom: 1px solid rgba(16,26,36,0.08);
+  padding: 20px 24px;
+}
+.offcanvas-header .btn-close {
+  filter: none;
+  opacity: 0.7;
+}
+.offcanvas-nav-links {
+  list-style: none;
+  padding: 8px 0;
+  margin: 0;
+}
+.offcanvas-nav-links li a {
+  display: block;
+  padding: 14px 24px;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text2);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.offcanvas-nav-links li a:hover {
+  color: var(--text);
+  border-left-color: var(--blue);
+  background: rgba(143,160,216,0.14);
+}
+.oc-group-label {
+  padding: 16px 24px 6px;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text2);
+}
+.offcanvas-nav-links li a.oc-sub {
+  padding-left: 38px;
+  font-size: 0.74rem;
+  color: var(--text2);
+}
+.oc-divider {
+  height: 1px;
+  background: rgba(16,26,36,0.10);
+  margin: 10px 24px;
+}
+.offcanvas-cta-wrap {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(16,26,36,0.08);
+  margin-top: auto;
+}
+
+/* ─── SERVICE FILTER PILLS ─── */
+.services-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 36px;
+}
+.services-filter .filter-pill {
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.services-filter .filter-pill:hover {
+  border-color: rgba(240,90,26,0.45);
+  color: var(--text);
+}
+.services-filter .filter-pill.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(240,90,26,0.35);
+}
+.service-card.hidden-card {
+  display: none;
+}
+
+/* ─── ENGAGEMENT ACCORDION OVERRIDES ─── */
+.accordion-item-eng {
+  background: linear-gradient(160deg, #172B55 0%, #0F2040 100%) !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: var(--r-lg) !important;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.accordion-button-eng {
+  background: transparent !important;
+  color: var(--text) !important;
+  font-family: var(--head) !important;
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  padding: 22px 28px !important;
+  box-shadow: none !important;
+  border-left: 3px solid var(--eng-color, rgba(255,255,255,0.15));
+  transition: background 0.2s !important;
+  gap: 16px;
+}
+.accordion-button-eng:not(.collapsed) {
+  background: rgba(240,90,26,0.04) !important;
+  border-left-color: var(--red) !important;
+}
+.accordion-button-eng::after {
+  filter: invert(1) opacity(0.6) !important;
+}
+.accordion-button-eng .eng-duration-inline {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(240,90,26,0.1);
+  border: 1px solid rgba(240,90,26,0.25);
+  color: var(--red);
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.accordion-body-eng {
+  background: transparent !important;
+  padding: 0 28px 24px !important;
+}
+.accordion-body-eng .eng-desc {
+  margin-bottom: 16px;
+}
+
+/* ─── CAPABILITY BARS (Credibility section) ─── */
+.capability-bars { margin-top: 28px; }
+.cap-bar-row {
+  margin-bottom: 16px;
+}
+.cap-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.cap-bar-label span:last-child { color: var(--red); }
+.cap-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.cap-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--red), #f97316);
+  width: 0%;
+  transition: width 1.4s cubic-bezier(0.22, 0.68, 0, 1.1);
+}
+.cap-bar-fill.blue  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.cap-bar-fill.green { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.cap-bar-fill.amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+</style>
+</head>
+<body>
+
+<!-- Defined early so it exists before any marquee image can fail to load -->
+<script>
+  function logoFallback(img){
+    var s = document.createElement('span');
+    s.className = 'logo-item logo-text';
+    s.textContent = img.getAttribute('data-name') || img.alt || '';
+    if (img.getAttribute('aria-hidden')) s.setAttribute('aria-hidden','true');
+    img.replaceWith(s);
+  }
+</script>
+
+<!-- ── TOP ANNOUNCEMENT BANNER ── -->
+<div class="top-banner" id="topBanner" role="region" aria-label="Announcement">
+  <div class="banner-track">
+    <span class="banner-msg active"><span class="b-emoji" aria-hidden="true">🚀</span> Avadh Helps Enterprises Stay Ahead Through Continuous Red Teaming</span>
+    <span class="banner-msg"><span class="b-emoji" aria-hidden="true">⚔️</span> Most Security Programs Measure Compliance. We Measure Resilience.</span>
+    <span class="banner-msg"><span class="b-emoji" aria-hidden="true">🛡️</span> Real Attackers Don't Follow Compliance Frameworks. Neither Do We.</span>
+  </div>
+  <button class="banner-close" id="bannerClose" type="button" aria-label="Dismiss announcement">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M50 10L85 65H15L50 10Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+      <path d="M50 35L70 65H30L50 35Z" fill="#E4682A"/>
+      <path d="M20 75L50 95L80 75L50 60L20 75Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+    </svg>
+    AVADH<span>SECURITY</span>
+  </a>
+  <ul class="nav-links">
+    <li class="nav-item has-dropdown">
+      <a href="/pentest" class="nav-link-top" aria-haspopup="true" aria-expanded="false">
+        Pentest
+        <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </a>
+      <div class="nav-dropdown" role="menu">
+        <a href="/pentest/web" role="menuitem">
+          <span class="dd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></span>
+          Web Application
+          <span class="dd-label">App</span>
+        </a>
+        <a href="/pentest/network" role="menuitem">
+          <span class="dd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M6.8 8 11 16M17.2 8 13 16"/></svg></span>
+          Network
+          <span class="dd-label">Infra</span>
+        </a>
+        <a href="/pentest/mobile" role="menuitem">
+          <span class="dd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></span>
+          Mobile
+          <span class="dd-label">iOS / Android</span>
+        </a>
+        <a href="/pentest/cloud" role="menuitem">
+          <span class="dd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1.3A3.5 3.5 0 0 1 17 18H7z"/></svg></span>
+          Cloud
+          <span class="dd-label">AWS / GCP / Azure</span>
+        </a>
+        <a href="/pentest/ai" role="menuitem">
+          <span class="dd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="8" height="8" rx="1.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+          AI / LLM
+          <span class="dd-label">Models &amp; APIs</span>
+        </a>
+      </div>
+    </li>
+    <li><a href="/engagement-models">Engagement Models</a></li>
+    <li><a href="/resources">Resources</a></li>
+    <li><a href="/pricing">Pricing</a></li>
+  </ul>
+  <a href="/contact" class="nav-cta d-none d-sm-inline-flex">Speak to Sales</a>
+  <!-- Mobile hamburger -->
+  <button class="nav-toggler" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ── MOBILE OFFCANVAS NAV ── -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+  <div class="offcanvas-header">
+    <div class="nav-logo" id="mobileNavLabel">
+      <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M50 10L85 65H15L50 10Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+        <path d="M50 35L70 65H30L50 35Z" fill="#E4682A"/>
+        <path d="M20 75L50 95L80 75L50 60L20 75Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+      </svg>
+      AVADH<span>SEC</span>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column p-0">
+    <ul class="offcanvas-nav-links">
+      <li class="oc-group-label">Pentest</li>
+      <li><a href="/pentest/web" class="oc-sub" data-bs-dismiss="offcanvas">Web</a></li>
+      <li><a href="/pentest/network" class="oc-sub" data-bs-dismiss="offcanvas">Network</a></li>
+      <li><a href="/pentest/mobile" class="oc-sub" data-bs-dismiss="offcanvas">Mobile</a></li>
+      <li><a href="/pentest/cloud" class="oc-sub" data-bs-dismiss="offcanvas">Cloud</a></li>
+      <li><a href="/pentest/ai" class="oc-sub" data-bs-dismiss="offcanvas">AI</a></li>
+      <li class="oc-divider"></li>
+      <li><a href="/engagement-models" data-bs-dismiss="offcanvas">Engagement Models</a></li>
+      <li><a href="/resources" data-bs-dismiss="offcanvas">Resources</a></li>
+      <li><a href="/pricing" data-bs-dismiss="offcanvas">Pricing</a></li>
+    </ul>
+    <div class="offcanvas-cta-wrap">
+      <a href="/contact" class="btn-primary d-block text-center" data-bs-dismiss="offcanvas" style="font-size:0.8rem;padding:12px 20px;">Speak to Sales</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="hero-orb"></div>
+  <div class="hero-orb2"></div>
+  <div class="hero-inner">
+
+    <h1 class="hero-headline">
+      We breach your defenses<br>
+      before the <span class="accent">real ones</span> do.
+    </h1>
+
+    <div class="hero-specials">
+      <span class="prefix">We specialize in</span>
+      <span class="spec-rotate" id="specRotate" aria-live="polite">
+        <span class="spec-word active">Red Team Operations</span>
+        <span class="spec-word">Adversary Emulation</span>
+        <span class="spec-word">Attack Surface Mapping</span>
+        <span class="spec-word">Zero-Day Hunting</span>
+        <span class="spec-word">Breaching Defenses</span>
+      </span>
+    </div>
+
+    <div class="hero-desc">
+      <div class="hero-desc-inner">
+        <div class="hero-desc-bar"></div>
+        <div class="hero-desc-body">
+          <span class="hero-desc-eyebrow">
+            <span class="hero-desc-dot"></span>
+            
+          </span>
+          <span class="hero-desc-divider"></span>
+          <span class="hero-desc-text">
+            Only platform that validates your security against <strong>real world adversaries.</strong>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avatar circles style for btn-ghost -->
+    <style>
+      .btn-ghost-demo {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--body);
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 10px 22px 10px 12px;
+        border-radius: var(--r);
+        border: 1px solid rgba(143,160,216,0.55);
+        background: rgba(143,160,216,0.08);
+        color: var(--text);
+        text-decoration: none;
+        transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        position: relative;
+      }
+      .btn-ghost-demo:hover {
+        border-color: rgba(143,160,216,0.9);
+        background: rgba(143,160,216,0.16);
+        box-shadow: 0 4px 20px rgba(143,160,216,0.20);
+      }
+      .demo-avatars {
+        display: flex;
+        align-items: center;
+      }
+      .demo-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2.5px solid rgba(255,255,255,0.85);
+        box-shadow: 0 2px 8px rgba(16,26,36,0.18);
+        flex-shrink: 0;
+        background: var(--bg3);
+        position: relative;
+      }
+      .demo-avatar:nth-child(2) {
+        margin-left: -12px;
+      }
+      .demo-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+        display: block;
+      }
+      .demo-btn-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        line-height: 1.2;
+      }
+      .demo-btn-label {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--text);
+      }
+      .demo-btn-sub {
+        font-size: 0.72rem;
+        color: var(--text2);
+        font-weight: 400;
+        font-family: var(--mono);
+        letter-spacing: 0.04em;
+      }
+      .demo-btn-arrow {
+        width: 18px;
+        height: 18px;
+        color: var(--blue);
+        flex-shrink: 0;
+        transition: transform 0.2s;
+      }
+      .btn-ghost-demo:hover .demo-btn-arrow {
+        transform: translateX(3px);
+      }
+    </style>
+
+    <div class="hero-actions">
+      <a href="/contact" class="btn-primary">
+        Start an Engagement
+      </a>
+      <a href="/engagement-models" class="btn-ghost-demo">
+        <div class="demo-avatars">
+          <div class="demo-avatar">
+            <img src="assets/img/avatar-1.jpg" alt="Team member" loading="lazy">
+          </div>
+          <div class="demo-avatar">
+            <img src="assets/img/avatar-2.jpg" alt="Team member" loading="lazy">
+          </div>
+        </div>
+        <div class="demo-btn-text">
+          <span class="demo-btn-label">How We Operate</span>
+          <span class="demo-btn-sub">Meet the team</span>
+        </div>
+        <svg class="demo-btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRUSTED BY / SOCIAL PROOF ── -->
+<section id="trusted">
+  <div class="container">
+    <p class="trusted-heading">
+      Our security researchers have secured multiple <span class="accent">Fortune 500</span> companies
+    </p>
+  </div>
+
+  <!-- Infinite logo marquee.
+       Each item loads a logo file from /assets/logos/. Supply the OFFICIAL
+       logo files (SVG preferred, or transparent PNG) that you have the rights
+       to display — I can't fetch or recreate trademarked brand logos for you.
+       If a file is missing, logoFallback() shows the company name as text, so
+       the strip never looks broken. The list is duplicated once for a seamless
+       loop; the second copy is aria-hidden to avoid screen-reader repetition. -->
+  <div class="marquee" aria-label="Companies our researchers have secured">
+    <div class="marquee-track">
+      <img class="logo-item" src="assets/logos/hyatt.svg" alt="Hyatt Hotels" data-name="Hyatt Hotels" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/compass.svg" alt="Compass" data-name="Compass" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/roblox.svg" alt="Roblox" data-name="Roblox" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/goldman-sachs.svg" alt="Goldman Sachs" data-name="Goldman Sachs" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/moonpay.svg" alt="MoonPay" data-name="MoonPay" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/airbnb.svg" alt="Airbnb" data-name="Airbnb" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/ubiquity.svg" alt="Ubiquity" data-name="Ubiquity" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/visa.svg" alt="Visa" data-name="Visa" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/epic-games.svg" alt="Epic Games" data-name="Epic Games" onerror="logoFallback(this)">
+      <!-- duplicate set for seamless loop -->
+      <img class="logo-item" src="assets/logos/hyatt.svg" alt="" aria-hidden="true" data-name="Hyatt Hotels" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/compass.svg" alt="" aria-hidden="true" data-name="Compass" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/roblox.svg" alt="" aria-hidden="true" data-name="Roblox" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/goldman-sachs.svg" alt="" aria-hidden="true" data-name="Goldman Sachs" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/moonpay.svg" alt="" aria-hidden="true" data-name="MoonPay" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/airbnb.svg" alt="" aria-hidden="true" data-name="Airbnb" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/ubiquity.svg" alt="" aria-hidden="true" data-name="Ubiquity" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/visa.svg" alt="" aria-hidden="true" data-name="Visa" onerror="logoFallback(this)">
+      <img class="logo-item" src="assets/logos/epic-games.svg" alt="" aria-hidden="true" data-name="Epic Games" onerror="logoFallback(this)">
+    </div>
+  </div>
+</section>
+
+<!-- ── BUILT BY PENTESTERS BANNER ── -->
+<section id="built-by">
+  <div class="container">
+    <div class="bb-wrap">
+      <div class="bb-header">
+        <p class="bb-eyebrow"><span class="dot"></span>Built by Hackers</p>
+        <h2 class="bb-heading">Engineered by operators who've<br>broken into <span class="bb-mark">real-world systems</span>.</h2>
+      </div>
+      <div class="bb-stats">
+        <div class="bb-stat">
+          <!-- Shield + checkmark — Periwinkle #8FA0D8 -->
+          <span class="bb-stat-icon bb-icon-cert" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10 1.5L2.5 4.5V10C2.5 14.1 5.9 17.7 10 18.5C14.1 17.7 17.5 14.1 17.5 10V4.5L10 1.5Z"
+                    stroke="#8FA0D8" stroke-width="1.5" stroke-linejoin="round" fill="rgba(143,160,216,0.16)"/>
+              <path d="M7 10L9 12L13 8"
+                    stroke="#8FA0D8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="bb-stat-number">OSCP · CRTP · CEH</span>
+          <span class="bb-stat-label">Certified Operators</span>
+        </div>
+        <div class="bb-stat">
+          <!-- Crosshair target — Periwinkle #8FA0D8 -->
+          <span class="bb-stat-icon bb-icon-exploit" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="7.5" stroke="#E4682A" stroke-width="1.5"/>
+              <circle cx="10" cy="10" r="4"   stroke="#E4682A" stroke-width="1.2"/>
+              <circle cx="10" cy="10" r="1.5" fill="#E4682A"/>
+              <line x1="10" y1="1"  x2="10" y2="4"  stroke="#E4682A" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="10" y1="16" x2="10" y2="19" stroke="#E4682A" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="1"  y1="10" x2="4"  y2="10" stroke="#E4682A" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="16" y1="10" x2="19" y2="10" stroke="#E4682A" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="bb-stat-number">500+</span>
+          <span class="bb-stat-label">N-Day Vulnerabilities Exploited</span>
+        </div>
+        <div class="bb-stat">
+          <!-- HackerOne @ mark — Periwinkle #8FA0D8 -->
+          <!-- HackerOne |1 glyph -->
+          <span class="bb-stat-icon bb-icon-h1" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- | plain fat bar -->
+              <rect x="2" y="0" width="18" height="80" rx="4" fill="#E49A75"/>
+              <!-- 1 fat vertical bar -->
+              <rect x="36" y="0" width="18" height="80" rx="4" fill="#E49A75"/>
+              <!-- 1 diagonal top-left serif stroke -->
+              <line x1="36" y1="0" x2="20" y2="20" stroke="#E49A75" stroke-width="14" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="bb-stat-number">HackerOne</span>
+          <span class="bb-stat-label">Acknowledged Researchers</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+#built-by {
+  padding: 100px 0;
+  border-top: none;
+}
+.bb-wrap { position: relative; }
+.bb-header {
+  text-align: center;
+  margin-bottom: 36px;
+  position: relative;
+  z-index: 1;
+}
+.bb-eyebrow {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-family: var(--mono); font-size: 0.78rem; font-weight: 500;
+  letter-spacing: 0.22em; text-transform: uppercase; color: #101A24;
+  margin: 0 0 16px;
+}
+.bb-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+.bb-mark { color: var(--red); }
+.bb-heading {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #101A24;
+  margin: 0;
+}
+/* ── Stats: three clean cards, no murky strip ── */
+.bb-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+.bb-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 30px 20px 26px;
+  text-align: center;
+  background:
+    linear-gradient(180deg, rgba(243,242,237,0.05), rgba(243,242,237,0) 45%),
+    #101A24;
+  border: 1px solid rgba(243,242,237,0.10);
+  border-radius: 16px;
+  box-shadow: 0 16px 38px rgba(16,26,36,0.16), inset 0 1px 0 rgba(243,242,237,0.06);
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+.bb-stat:hover { transform: translateY(-3px); box-shadow: 0 22px 48px rgba(16,26,36,0.22), inset 0 1px 0 rgba(243,242,237,0.08); border-color: rgba(228,104,42,0.55); }
+.bb-stat-icon {
+  width: 46px; height: 46px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+/* Icon tiles carry the brand accents: periwinkle / orange / salmon */
+.bb-icon-cert    { background: rgba(143,160,216,0.14); border: 1px solid rgba(143,160,216,0.42); }
+.bb-icon-exploit { background: rgba(228,104,42,0.16); border: 1px solid rgba(228,104,42,0.50); }
+.bb-icon-h1      { background: rgba(228,154,117,0.14); border: 1px solid rgba(228,154,117,0.42); }
+.bb-stat-number {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 1.7rem;
+  color: #F3F2ED;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.bb-stat-label {
+  font-family: var(--body);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(243,242,237,0.55);
+  line-height: 1.3;
+}
+@media (max-width: 640px) {
+  .bb-wrap { padding: 36px 20px 36px; border-radius: 16px; }
+  .bb-stats { grid-template-columns: 1fr; gap: 12px; }
+}
+</style>
+
+<!-- ── OFFENSIVE-FIRST APPROACH (diagram) ── -->
+<section class="section" id="offensive">
+
+  <!-- HEADING -->
+  <p class="oa-eyebrow"><span class="dot"></span>What We Do</p>
+  <h2 class="headline">
+    Comprehensive Security
+    <mark>Solutions</mark>
+  </h2>
+  <p class="oa-sub">
+    From penetration testing to advanced red team operations, we offer a full spectrum of offensive security services tailored to your needs.
+  </p>
+
+  <!-- SERVICES GRID -->
+  <div class="svc-grid">
+
+    <div class="svc-card svc-orange">
+      <div class="svc-top">
+        <span class="svc-emoji">🎯</span>
+        <span class="svc-tag">Application</span>
+      </div>
+      <h3 class="svc-title">Application Pentesting</h3>
+      <p class="svc-desc">Rigorous, manual testing to expose and exploit vulnerabilities before real-world attackers can find them.</p>
+    </div>
+
+    <div class="svc-card svc-peri">
+      <div class="svc-top">
+        <span class="svc-emoji">🌐</span>
+        <span class="svc-tag">Network</span>
+      </div>
+      <h3 class="svc-title">Network Pentesting</h3>
+      <p class="svc-desc">Detect and resolve vulnerabilities across internal, external, cloud, and hardware networks with expert deep-level pentesting.</p>
+    </div>
+
+    <div class="svc-card svc-salmon">
+      <div class="svc-top">
+        <span class="svc-emoji">⚔️</span>
+        <span class="svc-tag">Red Team</span>
+      </div>
+      <h3 class="svc-title">Red Team Operations</h3>
+      <p class="svc-desc">Full-scale adversary emulation and multi-stage attack simulations to test your detection, response, and resilience against real-world threats.</p>
+    </div>
+
+    <div class="svc-card svc-teal">
+      <div class="svc-top">
+        <span class="svc-emoji">🔍</span>
+        <span class="svc-tag">Assessment</span>
+      </div>
+      <h3 class="svc-title">Vulnerability Assessment</h3>
+      <p class="svc-desc">Continuous scanning and prioritization of your attack surface to ensure critical flaws are patched instantly.</p>
+    </div>
+
+    <div class="svc-card svc-gold">
+      <div class="svc-top">
+        <span class="svc-emoji">👁️</span>
+        <span class="svc-tag">Monitoring</span>
+      </div>
+      <h3 class="svc-title">Threat Monitoring</h3>
+      <p class="svc-desc">Proactively detect leaked credentials and emerging threats with continuous dark web and external attack surface monitoring.</p>
+    </div>
+
+    <div class="svc-card svc-salmon">
+      <div class="svc-top">
+        <span class="svc-emoji">📋</span>
+        <span class="svc-tag">Compliance</span>
+      </div>
+      <h3 class="svc-title">Compliance Readiness</h3>
+      <p class="svc-desc">Expert gap analysis and technical roadmaps to prepare your organization for ISO 27001, SOC2, and GDPR certifications.</p>
+    </div>
+
+  </div><!-- /svc-grid -->
+
+</section>
+
+<style>
+    :root {
+      --bone:#F3F2ED; --salmon:#E49A75; --orange:#E4682A; --navy:#101A24; --peri:#8FA0D8;
+      --orange-bg:rgba(228,104,42,0.09); --orange-bd:rgba(228,104,42,0.26);
+      --salmon-bg:rgba(228,154,117,0.13); --salmon-bd:rgba(228,154,117,0.32);
+      --peri-bg:rgba(143,160,216,0.13); --peri-bd:rgba(143,160,216,0.32);
+      --teal:#5FB6A6; --teal-dim:rgba(95,182,166,0.14);
+      --gold:#D9A441; --gold-dim:rgba(217,164,65,0.14);
+    }
+    .section { max-width: 1200px; margin: 0 auto; padding: 100px 40px; border-top: none; }
+    #offensive { position: relative; z-index: 0; }
+    #offensive::before {
+      content: ''; position: absolute; z-index: -1; pointer-events: none;
+      top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+      background:
+        radial-gradient(720px 380px at 14% 10%, rgba(143,160,216,0.16), transparent 60%),
+        radial-gradient(720px 380px at 86% 92%, rgba(228,104,42,0.11), transparent 60%),
+        #FBFAF6;
+    }
+    .headline { font-family: var(--head); font-weight: 700; font-size: clamp(2rem, 4.2vw, 2.75rem); color: var(--text); text-align: center; max-width: 880px; margin: 0 auto 18px; line-height: 1.18; letter-spacing: -0.01em; }
+    .headline mark {
+      background: none;
+      color: var(--red);
+      font-weight: 800;
+    }
+    .oa-eyebrow { display:flex; align-items:center; justify-content:center; gap:9px; font-family: var(--mono); font-size:0.78rem; font-weight:500; letter-spacing:0.22em; text-transform:uppercase; color: var(--text2); margin:0 0 18px; }
+    .oa-eyebrow .dot { width:7px; height:7px; border-radius:50%; background: var(--red); }
+    .oa-sub { text-align:center; max-width: 720px; margin: 0 auto 56px; font-family: var(--body); font-size: clamp(1rem,1.5vw,1.12rem); line-height:1.6; color: var(--text2); }
+    .oa-sub .oa-m { color:#5E73B8; font-weight:700; }
+    .oa-sub .oa-r { color: var(--orange); font-weight:700; }
+
+    /* ── SERVICES GRID ── */
+    .svc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .svc-card {
+      background: linear-gradient(155deg,
+        color-mix(in srgb, var(--svc-color, var(--red)) 15%, #FFFFFF) 0%,
+        color-mix(in srgb, var(--svc-color, var(--red)) 5%, #FFFFFF) 100%);
+      border: 1px solid color-mix(in srgb, var(--svc-color, var(--red)) 28%, transparent);
+      border-top: 3px solid var(--svc-color, var(--red));
+      border-radius: var(--r-lg);
+      padding: 28px 26px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      box-shadow: 0 6px 20px rgba(16,26,36,0.06);
+      transition: transform 0.45s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.5s ease;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .svc-card.is-hidden { opacity: 0; transform: translateY(30px); }
+    .svc-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 100% 100%, var(--svc-dim, var(--red-dim)) 0%, transparent 55%);
+      opacity: 0.7;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .svc-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 26px 56px rgba(16,26,36,0.16), 0 0 0 1px var(--svc-color, var(--red));
+      border-color: color-mix(in srgb, var(--svc-color, var(--red)) 45%, transparent);
+      border-top-color: var(--svc-color, var(--red));
+    }
+    .svc-card:active { transform: translateY(-3px) scale(0.992); }
+    .svc-card:hover::before { opacity: 1; }
+    .svc-card:hover .svc-emoji { background: var(--svc-color, var(--red)); transform: scale(1.06); }
+    @media (prefers-reduced-motion: reduce) { .svc-card.is-hidden { opacity: 1; transform: none; } }
+    .svc-orange { --svc-color: var(--red); --svc-dim: var(--red-dim); }
+    .svc-peri   { --svc-color: var(--blue); --svc-dim: var(--blue-dim); }
+    .svc-salmon { --svc-color: var(--salmon); --svc-dim: var(--salmon-dim); }
+    .svc-teal   { --svc-color: var(--red); --svc-dim: var(--red-dim); }
+    .svc-gold   { --svc-color: var(--blue); --svc-dim: var(--blue-dim); }
+    .svc-top {
+      display: flex; align-items: center; gap: 12px;
+      position: relative; z-index: 1;
+    }
+    .svc-emoji {
+      font-size: 1.6rem; line-height: 1;
+      width: 48px; height: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--svc-dim, var(--red-dim));
+      border-radius: 12px;
+      flex-shrink: 0;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .svc-tag {
+      font-family: var(--mono); font-size: 0.7rem; font-weight: 500;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--svc-color, var(--red));
+    }
+    .svc-title {
+      font-family: var(--body); font-weight: 600;
+      font-size: 1.3rem; color: var(--text); line-height: 1.28;
+      letter-spacing: -0.005em;
+      position: relative; z-index: 1;
+    }
+    .svc-desc {
+      font-family: var(--body); font-size: 0.95rem;
+      color: var(--text2); line-height: 1.6;
+      position: relative; z-index: 1;
+    }
+    @media (max-width: 1000px) {
+      .section { padding: 60px 20px 72px; }
+      .headline { margin-bottom: 44px; }
+      .svc-grid { grid-template-columns: 1fr; gap: 16px; }
+    }
+</style>
+
+<script>
+(function(){
+  /* Bootstrap-style fade-in entrance for the hero supporting line */
+  var el = document.getElementById('heroDesc');
+  if (!el) return;
+  el.classList.add('bs-fade-up');
+  window.addEventListener('load', function(){
+    setTimeout(function(){ el.classList.add('show'); }, 480);
+  });
+})();
+</script>
+
+<!-- ── WHY AVADH ── -->
+<section id="why">
+  <div class="container">
+    <div class="why-head">
+      <span class="why-eyebrow"><span class="why-eyebrow-dot"></span>The Difference</span>
+      <h2 class="why-title">Why <mark>Avadh</mark>?</h2>
+      <p class="why-sub">We are built for organizations that care about stopping attackers, not collecting certificates.</p>
+    </div>
+
+    <div class="why-box">
+
+      <!-- ── CARD 01: Collaborate with developers ── -->
+      <!-- ── CARD 01 ── -->
+      <div class="why-item why-item--feature">
+          <div class="why-item-body">
+          <h3 class="why-item-title">We collaborate directly with your developers</h3>
+          <p class="why-item-desc">Our pentesters embed into your <span class="hl-peri">sprint cycle</span> — reviewing code, threat-modelling features, and feeding findings back through your existing <span class="hl-orange">CI/CD pipeline</span>. No waiting for a quarterly report. <span class="hl-salmon">Fixes ship with the next build.</span></p>
+          <ul class="why-item-bullets">
+            <li><span class="wib-dot" style="background:#8FA0D8"></span>Slack + Jira integration for real-time triage</li>
+            <li><span class="wib-dot" style="background:#E4682A"></span>Findings mapped to developer-readable code diffs</li>
+            <li><span class="wib-dot" style="background:#E49A75"></span>Re-test included on every remediated vuln</li>
+          </ul>
+        </div>
+      <div class="why-stage why-collab">
+          <span class="why-num">01</span>
+          <!-- Developer ⇄ Pentester collaboration (dark theme, ported from index.html) -->
+          <svg viewBox="0 0 680 520" role="img" aria-label="Developer and pentester collaborating through a shared pipeline" xmlns="http://www.w3.org/2000/svg">
+      <title>Developer and Pentester Collaboration</title>
+      <desc>An illustration showing a developer and security pentester working together, with shared code, vulnerability reports, and a secure build pipeline in the middle</desc>
+
+      <defs>
+        <marker id="why-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <clipPath id="cl-dev"><circle cx="130" cy="125" r="31"/></clipPath>
+        <clipPath id="cl-pen"><circle cx="550" cy="125" r="31"/></clipPath>
+
+        <!-- Clip paths for circular avatar images -->
+        <mask id="text-gap-mask" maskUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="680" height="520" fill="white"/>
+          <rect x="207.93" y="18.4"  width="264.15" height="26.4"  fill="black" rx="2"/>
+          <rect x="232.03" y="43.2"  width="216.32" height="20"    fill="black" rx="2"/>
+          <rect x="119.86" y="107"   width="20.99"  height="19.2"  fill="black" rx="2"/>
+          <rect x="113.21" y="122"   width="34.25"  height="19.2"  fill="black" rx="2"/>
+          <rect x="91.61"  y="156.4" width="77.41"  height="21.6"  fill="black" rx="2"/>
+          <rect x="82.88"  y="174"   width="95.0"   height="19.2"  fill="black" rx="2"/>
+          <rect x="62.05"  y="201"   width="37.28"  height="19.2"  fill="black" rx="2"/>
+          <rect x="114.56" y="201"   width="39.05"  height="19.2"  fill="black" rx="2"/>
+          <rect x="163.61" y="201"   width="43.42"  height="19.2"  fill="black" rx="2"/>
+          <rect x="56"     y="239.6" width="141.06" height="16.8"  fill="black" rx="2"/>
+          <rect x="56"     y="255.6" width="92.68"  height="16.8"  fill="black" rx="2"/>
+          <rect x="537.76" y="108"   width="24.49"  height="19.2"  fill="black" rx="2"/>
+          <rect x="533.71" y="123"   width="32.71"  height="19.2"  fill="black" rx="2"/>
+          <rect x="513.49" y="156.4" width="73.66"  height="21.6"  fill="black" rx="2"/>
+          <rect x="493.38" y="174"   width="113.03" height="19.2"  fill="black" rx="2"/>
+          <rect x="477.89" y="201"   width="40.4"   height="19.2"  fill="black" rx="2"/>
+          <rect x="533.51" y="201"   width="40.98"  height="19.2"  fill="black" rx="2"/>
+          <rect x="584.07" y="201"   width="52.44"  height="19.2"  fill="black" rx="2"/>
+          <rect x="472"    y="239.6" width="110.83" height="16.8"  fill="black" rx="2"/>
+          <rect x="472"    y="255.6" width="104.78" height="16.8"  fill="black" rx="2"/>
+          <rect x="283.52" y="99.4"  width="112.77" height="21.6"  fill="black" rx="2"/>
+          <rect x="278.94" y="133"   width="122.22" height="19.2"  fill="black" rx="2"/>
+          <rect x="298.59" y="170"   width="83.98"  height="19.2"  fill="black" rx="2"/>
+          <rect x="303.77" y="207"   width="72.69"  height="19.2"  fill="black" rx="2"/>
+          <rect x="299.43" y="244"   width="81.14"  height="19.2"  fill="black" rx="2"/>
+          <rect x="215.19" y="135"   width="37.05"  height="19.2"  fill="black" rx="2"/>
+          <rect x="198.43" y="182"   width="70.93"  height="19.2"  fill="black" rx="2"/>
+          <rect x="407.32" y="134"   width="69.13"  height="19.2"  fill="black" rx="2"/>
+          <rect x="414.35" y="182"   width="55.53"  height="19.2"  fill="black" rx="2"/>
+          <rect x="261.44" y="332.4" width="157.11" height="21.6"  fill="black" rx="2"/>
+          <rect x="56.09"  y="361"   width="107.19" height="19.2"  fill="black" rx="2"/>
+          <rect x="181.66" y="361"   width="80.84"  height="19.2"  fill="black" rx="2"/>
+          <rect x="290.54" y="361"   width="75.89"  height="19.2"  fill="black" rx="2"/>
+          <rect x="397.36" y="361"   width="77.53"  height="19.2"  fill="black" rx="2"/>
+          <rect x="504.2"  y="361"   width="111.82" height="19.2"  fill="black" rx="2"/>
+          <rect x="267.34" y="435.4" width="145.65" height="21.6"  fill="black" rx="2"/>
+          <rect x="233.06" y="453"   width="214.44" height="19.2"  fill="black" rx="2"/>
+        </mask>
+      </defs>
+
+
+
+      <!-- ══════════════════════════════════════
+           DEVELOPER CARD (left)
+           ══════════════════════════════════════ -->
+      <!-- Card bg: slightly lighter navy so it lifts off the page -->
+      <rect x="40" y="80" width="180" height="210" rx="12"
+            fill="#162031" stroke="rgba(143,160,216,0.25)" stroke-width="0.5"/>
+
+      <!-- avatar: developer photo in periwinkle ring -->
+      <circle cx="130" cy="125" r="31" fill="#1e2e42"/>
+      <image href="assets/img/developer.png" x="99" y="94" width="62" height="62" clip-path="url(#cl-dev)" preserveAspectRatio="xMidYMid slice"/>
+      <circle cx="130" cy="125" r="31" fill="none" stroke="#8FA0D8" stroke-width="1.5"/>
+      
+
+      <!-- name / role -->
+      <text x="130" y="172" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:14px;font-weight:500;">Developer</text>
+      <text x="130" y="188" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.55);font-family:'Barlow', sans-serif;font-size:12px;font-weight:400;">Feature builder</text>
+
+      <!-- tags: periwinkle / salmon / signal orange -->
+      <rect x="58"  y="202" width="46" height="18" rx="4" fill="rgba(143,160,216,0.18)"/>
+      <text x="81"  y="215" text-anchor="middle"
+            style="fill:#8FA0D8;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">code</text>
+      <rect x="111" y="202" width="46" height="18" rx="4" fill="rgba(228,154,117,0.18)"/>
+      <text x="134" y="215" text-anchor="middle"
+            style="fill:#E49A75;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">tests</text>
+      <rect x="164" y="202" width="42" height="18" rx="4" fill="rgba(228,104,42,0.18)"/>
+      <text x="185" y="215" text-anchor="middle"
+            style="fill:#E4682A;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">CI/CD</text>
+
+      <!-- separator -->
+      <line x1="56" y1="232" x2="204" y2="232" stroke="rgba(143,160,216,0.15)" stroke-width="0.5"/>
+
+      <!-- tools list -->
+      <text x="60" y="252"
+            style="fill:#8FA0D8;font-family:'JetBrains Mono', monospace;font-size:11px;">$ git commit -m "feat"</text>
+      <text x="60" y="268"
+            style="fill:#8FA0D8;font-family:'JetBrains Mono', monospace;font-size:11px;">$ npm run test</text>
+
+      <!-- ══════════════════════════════════════
+           PENTESTER CARD (right)
+           ══════════════════════════════════════ -->
+      <rect x="460" y="80" width="180" height="210" rx="12"
+            fill="#162031" stroke="rgba(143,160,216,0.25)" stroke-width="0.5"/>
+
+      <!-- avatar: pentester photo in salmon ring -->
+      <circle cx="550" cy="125" r="31" fill="#1e2e42"/>
+      <image href="assets/img/pentester.png" x="519" y="94" width="62" height="62" clip-path="url(#cl-pen)" preserveAspectRatio="xMidYMid slice"/>
+      <circle cx="550" cy="125" r="31" fill="none" stroke="#E49A75" stroke-width="1.5"/>
+      
+
+      <!-- name / role -->
+      <text x="550" y="172" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:14px;font-weight:500;">Pentester</text>
+      <text x="550" y="188" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.55);font-family:'Barlow', sans-serif;font-size:12px;font-weight:400;">Security specialist</text>
+
+      <!-- tags -->
+      <rect x="472" y="202" width="52" height="18" rx="4" fill="rgba(228,104,42,0.18)"/>
+      <text x="498" y="215" text-anchor="middle"
+            style="fill:#E4682A;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">vulns</text>
+      <rect x="530" y="202" width="48" height="18" rx="4" fill="rgba(228,154,117,0.18)"/>
+      <text x="554" y="215" text-anchor="middle"
+            style="fill:#E49A75;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">recon</text>
+      <rect x="584" y="202" width="52" height="18" rx="4" fill="rgba(143,160,216,0.18)"/>
+      <text x="610" y="215" text-anchor="middle"
+            style="fill:#8FA0D8;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">OWASP</text>
+
+      <!-- separator -->
+      <line x1="476" y1="232" x2="624" y2="232" stroke="rgba(143,160,216,0.15)" stroke-width="0.5"/>
+
+      <!-- tools -->
+      <text x="476" y="252"
+            style="fill:#E49A75;font-family:'JetBrains Mono', monospace;font-size:11px;">$ nmap -sV target</text>
+      <text x="476" y="268"
+            style="fill:#E49A75;font-family:'JetBrains Mono', monospace;font-size:11px;">$ burpsuite scan</text>
+
+      <!-- ══════════════════════════════════════
+           CENTER COLLABORATION HUB
+           ══════════════════════════════════════ -->
+      <rect x="252" y="88" width="176" height="198" rx="12"
+            fill="#0d1720" stroke="rgba(143,160,216,0.25)" stroke-width="0.5"/>
+
+      <!-- hub title -->
+      <text x="340" y="115" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:14px;font-weight:500;">Shared Pipeline</text>
+
+      <!-- Step 1 – bone bg, signal orange border -->
+      <rect x="270" y="128" width="140" height="28" rx="6" fill="rgba(228,104,42,0.12)" stroke="#E4682A" stroke-width="0.5"/>
+      <text x="340" y="147" text-anchor="middle"
+            style="fill:#E4682A;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Plan &amp; Threat Model</text>
+      <!-- arrow down -->
+      <line x1="340" y1="156" x2="340" y2="164" stroke="rgba(243,242,237,0.3)" stroke-width="1.2" marker-end="url(#why-arrow)"/>
+
+      <!-- Step 2 – periwinkle -->
+      <rect x="270" y="165" width="140" height="28" rx="6" fill="rgba(143,160,216,0.12)" stroke="#8FA0D8" stroke-width="0.5"/>
+      <text x="340" y="184" text-anchor="middle"
+            style="fill:#8FA0D8;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Code Review</text>
+      <!-- arrow down -->
+      <line x1="340" y1="193" x2="340" y2="201" stroke="rgba(243,242,237,0.3)" stroke-width="1.2" marker-end="url(#why-arrow)"/>
+
+      <!-- Step 3 – salmon -->
+      <rect x="270" y="202" width="140" height="28" rx="6" fill="rgba(228,154,117,0.12)" stroke="#E49A75" stroke-width="0.5"/>
+      <text x="340" y="221" text-anchor="middle"
+            style="fill:#E49A75;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Pen Testing</text>
+      <!-- arrow down -->
+      <line x1="340" y1="230" x2="340" y2="238" stroke="rgba(243,242,237,0.3)" stroke-width="1.2" marker-end="url(#why-arrow)"/>
+
+      <!-- Step 4 – bone/off-white -->
+      <rect x="270" y="239" width="140" height="28" rx="6" fill="rgba(243,242,237,0.08)" stroke="rgba(243,242,237,0.35)" stroke-width="0.5"/>
+      <text x="340" y="258" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Fix &amp; Harden</text>
+
+      <!-- progress bar -->
+      <rect x="290" y="272" width="100" height="6" rx="3" fill="#E4682A" opacity="0.3"/>
+
+      <!-- ══════════════════════════════════════
+           HORIZONTAL CONNECTOR ARROWS
+           ══════════════════════════════════════ -->
+      <!-- Dev → Hub: code push -->
+      <path d="M225 160 Q238 155 252 155"
+            fill="none" stroke="rgba(143,160,216,0.4)" stroke-width="1.5"/>
+      <text x="234" y="149" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.6);font-family:'Barlow', sans-serif;font-size:12px;">code</text>
+
+      <!-- Hub → Dev: fix request -->
+      <path d="M252 175 Q238 182 225 185"
+            fill="none" stroke="#E4682A" stroke-width="1.2" marker-start="url(#why-arrow)"
+            mask="url(#text-gap-mask)"/>
+      <text x="234" y="196" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.6);font-family:'Barlow', sans-serif;font-size:12px;">fix request</text>
+
+      <!-- Hub → Pentester: test target -->
+      <path d="M428 155 Q444 152 460 155"
+            fill="none" stroke="rgba(228,154,117,0.5)" stroke-width="1.5"/>
+      <text x="442" y="148" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.6);font-family:'Barlow', sans-serif;font-size:12px;">test target</text>
+
+      <!-- Pentester → Hub: findings -->
+      <path d="M460 175 Q444 182 428 180"
+            fill="none" stroke="#E4682A" stroke-width="1.2" marker-start="url(#why-arrow)"/>
+      <text x="442" y="196" text-anchor="middle"
+            style="fill:rgba(243,242,237,0.6);font-family:'Barlow', sans-serif;font-size:12px;">findings</text>
+
+      <!-- ══════════════════════════════════════
+           BOTTOM OUTPUT SECTION
+           ══════════════════════════════════════ -->
+      <rect x="40" y="322" width="600" height="90" rx="10"
+            fill="#0d1720" stroke="rgba(143,160,216,0.25)" stroke-width="0.5"/>
+      <text x="340" y="348" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:14px;font-weight:500;">Collaboration Outputs</text>
+
+      <!-- Output badges row -->
+      <!-- Secure codebase – periwinkle -->
+      <rect x="56"  y="358" width="108" height="26" rx="6" fill="rgba(143,160,216,0.12)" stroke="#8FA0D8" stroke-width="0.5"/>
+      <text x="110" y="375" text-anchor="middle"
+            style="fill:#8FA0D8;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Secure codebase</text>
+
+      <!-- Vuln reports – signal orange -->
+      <rect x="174" y="358" width="96"  height="26" rx="6" fill="rgba(228,104,42,0.12)" stroke="#E4682A" stroke-width="0.5"/>
+      <text x="222" y="375" text-anchor="middle"
+            style="fill:#E4682A;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Vuln reports</text>
+
+      <!-- Patch notes – bone -->
+      <rect x="280" y="358" width="96"  height="26" rx="6" fill="rgba(243,242,237,0.08)" stroke="rgba(243,242,237,0.3)" stroke-width="0.5"/>
+      <text x="328" y="375" text-anchor="middle"
+            style="fill:#F3F2ED;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Patch notes</text>
+
+      <!-- Risk scoring – salmon -->
+      <rect x="386" y="358" width="100" height="26" rx="6" fill="rgba(228,154,117,0.12)" stroke="#E49A75" stroke-width="0.5"/>
+      <text x="436" y="375" text-anchor="middle"
+            style="fill:#E49A75;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Risk scoring</text>
+
+      <!-- Compliance ready – periwinkle -->
+      <rect x="496" y="358" width="128" height="26" rx="6" fill="rgba(143,160,216,0.12)" stroke="#8FA0D8" stroke-width="0.5"/>
+      <text x="560" y="375" text-anchor="middle"
+            style="fill:#8FA0D8;font-family:'Barlow', sans-serif;font-size:12px;font-weight:500;">Compliance ready</text>
+
+      <!-- dashed arrow from hub down to outputs -->
+      <line x1="340" y1="286" x2="340" y2="322"
+            stroke="rgba(143,160,216,0.3)" stroke-width="1.2" stroke-dasharray="4 3"/>
+
+
+    </svg>
+        </div>
+      </div>
+
+      <!-- ── CARD 02 ── -->
+      <div class="why-item why-item--rev">
+          <div class="why-stage stage-peri">
+            <span class="why-num">02</span>
+            <!-- Checklist vs adversarial mindset illustration -->
+            <svg viewBox="0 0 280 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- Left: checklist (faded, crossed out) -->
+              <rect x="16" y="20" width="110" height="100" rx="10" fill="rgba(243,242,237,0.03)" stroke="rgba(243,242,237,0.14)" stroke-width="1"/>
+              <text x="71" y="40" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-size="11" font-weight="700" fill="rgba(243,242,237,0.42)" letter-spacing=".5">CHECKLIST</text>
+              <!-- ticked items (greyed) -->
+              <rect x="28" y="48" width="86" height="14" rx="3" fill="rgba(243,242,237,0.04)"/>
+              <text x="36" y="59" font-family="'Barlow', sans-serif" font-size="9.5" fill="rgba(243,242,237,0.32)">✓  OWASP Top 10</text>
+              <rect x="28" y="66" width="86" height="14" rx="3" fill="rgba(243,242,237,0.04)"/>
+              <text x="36" y="77" font-family="'Barlow', sans-serif" font-size="9.5" fill="rgba(243,242,237,0.32)">✓  CVE scan</text>
+              <rect x="28" y="84" width="86" height="14" rx="3" fill="rgba(243,242,237,0.04)"/>
+              <text x="36" y="95" font-family="'Barlow', sans-serif" font-size="9.5" fill="rgba(243,242,237,0.32)">✓  Port scan</text>
+              <rect x="28" y="102" width="86" height="14" rx="3" fill="rgba(243,242,237,0.04)"/>
+              <text x="36" y="113" font-family="'Barlow', sans-serif" font-size="9.5" fill="rgba(243,242,237,0.32)">✓  Report filed</text>
+              <!-- diagonal cross -->
+              <line x1="16" y1="20" x2="126" y2="120" stroke="rgba(228,104,42,0.65)" stroke-width="1.8" stroke-linecap="round"/>
+              <!-- Right: adversarial mindset -->
+              <rect x="152" y="20" width="110" height="100" rx="10" fill="rgba(228,104,42,0.10)" stroke="rgba(228,104,42,0.45)" stroke-width="1"/>
+              <text x="207" y="40" text-anchor="middle" font-family="'Barlow Condensed', sans-serif" font-size="11" font-weight="700" fill="#E4682A" letter-spacing=".5">ADVERSARIAL</text>
+              <rect x="164" y="48" width="86" height="14" rx="3" fill="rgba(228,104,42,0.12)"/>
+              <text x="172" y="59" font-family="'Barlow', sans-serif" font-size="9.5" fill="#EC844B">→  Logic chain abuse</text>
+              <rect x="164" y="66" width="86" height="14" rx="3" fill="rgba(228,104,42,0.12)"/>
+              <text x="172" y="77" font-family="'Barlow', sans-serif" font-size="9.5" fill="#EC844B">→  Business logic</text>
+              <rect x="164" y="84" width="86" height="14" rx="3" fill="rgba(228,104,42,0.12)"/>
+              <text x="172" y="95" font-family="'Barlow', sans-serif" font-size="9.5" fill="#EC844B">→  Auth bypass chains</text>
+              <rect x="164" y="102" width="86" height="14" rx="3" fill="rgba(228,104,42,0.12)"/>
+              <text x="172" y="113" font-family="'Barlow', sans-serif" font-size="9.5" fill="#EC844B">→  Chained exploits</text>
+            </svg>
+          </div>
+          <div class="why-item-body">
+            <h3 class="why-item-title">We work beyond a checklist</h3>
+            <p class="why-item-desc">Compliance tools catch known patterns. We hunt <span class="hl-orange">logic flaws</span>, <span class="hl-peri">chained exploits</span>, and <span class="hl-salmon">business-flow abuses</span> that no automated scanner or OWASP checklist will ever surface.</p>
+          </div>
+        </div>
+
+      <!-- ── CARD 03 ── -->
+      <div class="why-item">
+          <div class="why-stage stage-salmon">
+            <span class="why-num">03</span>
+            <!-- Adversary emulation: ATT&CK chain visual -->
+            <svg viewBox="0 0 280 146" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <!-- ATT&CK label -->
+              <rect x="90" y="12" width="100" height="18" rx="5" fill="rgba(228,104,42,0.10)" stroke="rgba(228,104,42,0.28)" stroke-width=".8"/>
+              <text x="140" y="24" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="9" font-weight="700" fill="#E4682A">MITRE ATT&amp;CK™</text>
+
+              <!-- Timeline track -->
+              <line x1="26" y1="76" x2="254" y2="76" stroke="rgba(228,104,42,0.20)" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+              <!-- 1 · Recon — lightest orange (#E4A87A) -->
+              <circle cx="44" cy="76" r="18" fill="#172334" stroke="rgba(228,168,122,0.45)" stroke-width="1"/>
+              <circle cx="44" cy="76" r="18" fill="rgba(228,168,122,0.13)" stroke="#E4A87A" stroke-width="1.4"/>
+              <circle cx="44" cy="76" r="7.5" fill="none" stroke="#E4A87A" stroke-width="1.4"/>
+              <circle cx="44" cy="76" r="3"   fill="none" stroke="#E4A87A" stroke-width="1.4"/>
+              <line x1="44" y1="65"  x2="44" y2="70"   stroke="#E4A87A" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="44" y1="82"  x2="44" y2="87"   stroke="#E4A87A" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="33" y1="76"  x2="38" y2="76"   stroke="#E4A87A" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="50" y1="76"  x2="55" y2="76"   stroke="#E4A87A" stroke-width="1.3" stroke-linecap="round"/>
+              <circle cx="44" cy="76" r="1.4" fill="#E4A87A"/>
+              <circle cx="57" cy="63" r="6.5" fill="#172334" stroke="#E4A87A" stroke-width="1"/>
+              <text x="57" y="65.8" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="700" fill="#E4A87A">1</text>
+              <text x="44" y="112" text-anchor="middle" font-family="'Barlow', sans-serif" font-size="9.5" font-weight="600" fill="rgba(243,242,237,0.65)">Recon</text>
+
+              <!-- 2 · Initial Access — mid-light orange (#E49A75 salmon-orange) -->
+              <circle cx="100" cy="76" r="18" fill="#172334" stroke="rgba(228,154,117,0.45)" stroke-width="1"/>
+              <circle cx="100" cy="76" r="18" fill="rgba(228,154,117,0.15)" stroke="#E49A75" stroke-width="1.4"/>
+              <rect x="93" y="68" width="10" height="14" rx="1.2" fill="none" stroke="#E49A75" stroke-width="1.4"/>
+              <path d="M95.5 68 Q95.5 64 98 64 Q100.5 64 100.5 68" fill="none" stroke="#E49A75" stroke-width="1.4" stroke-linecap="round"/>
+              <rect x="94" y="68" width="8" height="6" rx="1" fill="#E49A75" opacity="0.85"/>
+              <circle cx="98" cy="70.5" r="1.1" fill="#172334"/>
+              <rect x="97.4" y="71.5" width="1.2" height="1.8" rx="0.3" fill="#172334"/>
+              <line x1="110" y1="75" x2="105" y2="75" stroke="#E49A75" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M106.5 72.8L104 75L106.5 77.2" fill="none" stroke="#E49A75" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="113" cy="63" r="6.5" fill="#172334" stroke="#E49A75" stroke-width="1"/>
+              <text x="113" y="65.8" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="700" fill="#E49A75">2</text>
+              <text x="100" y="112" text-anchor="middle" font-family="'Barlow', sans-serif" font-size="9" font-weight="600" fill="rgba(243,242,237,0.65)">Initial Access</text>
+
+              <!-- 3 · Lateral Move — mid-deep orange (#EC844B) -->
+              <circle cx="156" cy="76" r="18" fill="#172334" stroke="rgba(236,132,75,0.45)" stroke-width="1"/>
+              <circle cx="156" cy="76" r="18" fill="rgba(236,132,75,0.15)" stroke="#EC844B" stroke-width="1.4"/>
+              <circle cx="149" cy="81" r="2.8" fill="none" stroke="#EC844B" stroke-width="1.4"/>
+              <circle cx="156" cy="70" r="2.8" fill="none" stroke="#EC844B" stroke-width="1.4"/>
+              <circle cx="163" cy="81" r="2.8" fill="none" stroke="#EC844B" stroke-width="1.4"/>
+              <line x1="151.2" y1="78.8" x2="153.8" y2="72.5" stroke="#EC844B" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="158.2" y1="72.5" x2="160.8" y2="78.8" stroke="#EC844B" stroke-width="1.3" stroke-linecap="round"/>
+              <path d="M149 81 Q156 69 163 81" fill="none" stroke="#EC844B" stroke-width="1.2" stroke-dasharray="2.5 2" stroke-linecap="round"/>
+              <path d="M160.8 79.2L163.2 81.2L161.2 83.2" fill="none" stroke="#EC844B" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="149" cy="81" r="1.3" fill="#EC844B"/>
+              <circle cx="169" cy="63" r="6.5" fill="#172334" stroke="#EC844B" stroke-width="1"/>
+              <text x="169" y="65.8" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="700" fill="#EC844B">3</text>
+              <text x="156" y="112" text-anchor="middle" font-family="'Barlow', sans-serif" font-size="9" font-weight="600" fill="rgba(243,242,237,0.65)">Lateral Move</text>
+
+              <!-- 4 · Exfiltration — full signal orange (#E4682A) -->
+              <circle cx="212" cy="76" r="23" fill="none" stroke="rgba(228,104,42,0.45)" stroke-width="1" stroke-dasharray="3 3"/>
+              <circle cx="212" cy="76" r="18" fill="#172334" stroke="rgba(228,104,42,0.45)" stroke-width="1"/>
+              <circle cx="212" cy="76" r="18" fill="rgba(228,104,42,0.16)" stroke="#E4682A" stroke-width="1.6"/>
+              <rect x="207" y="71" width="10" height="10" rx="1.5" fill="none" stroke="#E4682A" stroke-width="1.4"/>
+              <line x1="207" y1="74.5" x2="217" y2="74.5" stroke="#E4682A" stroke-width="1" stroke-opacity="0.6"/>
+              <line x1="207" y1="77.5" x2="217" y2="77.5" stroke="#E4682A" stroke-width="1" stroke-opacity="0.6"/>
+              <circle cx="215.5" cy="72.5" r="1" fill="#E4682A"/>
+              <line x1="217" y1="71" x2="222" y2="66" stroke="#E4682A" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M218.5 66L222 66L222 69.5" fill="none" stroke="#E4682A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="219.5" cy="68.5" r="1.1" fill="#E4682A" opacity="0.7"/>
+              <circle cx="221"   cy="67"   r="0.8" fill="#E4682A" opacity="0.45"/>
+              <circle cx="225" cy="63" r="6.5" fill="#E4682A"/>
+              <text x="225" y="65.8" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="7.5" font-weight="700" fill="#FFFFFF">4</text>
+              <text x="212" y="112" text-anchor="middle" font-family="'Barlow', sans-serif" font-size="9.5" font-weight="600" fill="rgba(243,242,237,0.74)">Exfiltration</text>
+
+              <!-- arrows between nodes -->
+              <line x1="64" y1="76" x2="80" y2="76" stroke="#E49A75" stroke-width="1.3" stroke-opacity=".65" marker-end="url(#why-arrow)"/>
+              <line x1="120" y1="76" x2="136" y2="76" stroke="#EC844B" stroke-width="1.3" stroke-opacity=".65" marker-end="url(#why-arrow)"/>
+              <line x1="176" y1="76" x2="187" y2="76" stroke="#E4682A" stroke-width="1.3" stroke-opacity=".7" marker-end="url(#why-arrow)"/>
+            </svg>
+          </div>
+          <div class="why-item-body">
+            <h3 class="why-item-title">We simulate adversaries, not just perform penetration tests</h3>
+            <p class="why-item-desc">We follow <span class="hl-orange">MITRE ATT&amp;CK™ kill chains</span> — recon through exfiltration — the way a real nation-state or criminal group would. You get a <span class="hl-peri">true measure of breach impact</span>, not a vuln count.</p>
+          </div>
+        </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  #why {
+    padding: 100px 0;
+    background-color: var(--bg);
+    transition: background-color 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #why.why-active { background-color: #101A24; }
+  .why-head { text-align: center; max-width: 760px; margin: 0 auto; }
+  .why-eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--red); margin-bottom: 20px;
+  }
+  .why-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .why-title {
+    font-family: var(--head); font-weight: 700;
+    font-size: clamp(2rem, 4.2vw, 2.75rem);
+    letter-spacing: -0.01em; color: var(--text); line-height: 1.15; margin-bottom: 18px;
+  }
+  .why-title mark { background: none; color: var(--red); }
+  .why-sub {
+    font-size: clamp(1rem, 1.6vw, 1.18rem); color: var(--text2);
+    line-height: 1.55; max-width: 640px; margin: 0 auto;
+  }
+  /* header reads on the periwinkle band */
+  #why .why-eyebrow, #why .why-sub, #why .why-title { transition: color 0.9s cubic-bezier(0.4, 0, 0.2, 1); }
+  #why.why-active .why-title { color: #F3F2ED; }
+  #why.why-active .why-eyebrow { color: var(--salmon); }
+  #why.why-active .why-sub { color: rgba(243,242,237,0.68); }
+
+  /* ── Full-width stacked rows: one differentiator at a time ── */
+  .why-box {
+    margin-top: 56px;
+    display: flex;
+    flex-direction: column;
+    background: #16212E;
+    border: 1px solid rgba(243,242,237,0.12);
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+  }
+  .why-item {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: center;
+    gap: 48px;
+    padding: 52px 56px;
+    border-bottom: 1px solid rgba(243,242,237,0.10);
+    transition: background 0.25s;
+  }
+  .why-item:last-child { border-bottom: none; }
+  .why-item:hover { background: rgba(243,242,237,0.03); }
+  /* alternate rows: text on the left, diagram on the right */
+  .why-item--rev .why-stage { order: 2; }
+  .why-item--rev .why-item-body { order: 1; }
+
+  /* Card 01 — full-width feature row: large diagram on top, centered text below */
+  .why-item--feature { grid-template-columns: 1fr; gap: 34px; }
+  .why-item--feature .why-item-body { text-align: center; align-items: center; }
+  .why-item--feature .why-item-desc { max-width: 760px; }
+  .why-item--feature .why-item-bullets { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 12px 30px; margin-top: 8px; }
+
+  /* Diagram stage — fills its column, aspect preserved (enlarged) */
+  .why-stage {
+    position: relative;
+    border-radius: 16px;
+    padding: 22px 24px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .stage-peri   { background: #111B27; border: 1px solid rgba(143,160,216,0.16); }
+  .stage-salmon { background: #111B27; border: 1px solid rgba(228,154,117,0.16); }
+  .why-collab {
+    background: #111B27;
+    border: 1px solid rgba(143,160,216,0.16);
+  }
+  .why-collab svg { max-width: 660px; margin: 0 auto; }
+  .why-stage svg { width: 100%; height: auto; display: block; }
+
+  .why-num {
+    position: absolute; top: 14px; right: 16px; z-index: 2;
+    font-family: var(--mono); font-size: 1rem; font-weight: 700; color: rgba(243,242,237,0.28);
+  }
+
+  .why-item-body { display: flex; flex-direction: column; gap: 14px; }
+  .why-item-title {
+    font-family: var(--head); font-weight: 700;
+    font-size: clamp(1.5rem, 2.6vw, 2rem);
+    line-height: 1.18; color: #F3F2ED; letter-spacing: -0.01em;
+  }
+  .why-item-desc {
+    font-family: var(--body); font-size: clamp(0.98rem, 1.3vw, 1.08rem); color: rgba(243,242,237,0.70);
+    line-height: 1.62; margin: 0;
+  }
+  .why-item-desc .hl-orange { color: #E4682A; font-weight: 600; }
+  .why-item-desc .hl-peri   { color: #8FA0D8; font-weight: 600; }
+  .why-item-desc .hl-salmon { color: #E49A75; font-weight: 600; }
+  .why-item-bullets { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+  .why-item-bullets li {
+    display: flex; align-items: center; gap: 11px;
+    font-family: var(--body); font-size: clamp(0.92rem, 1.1vw, 1rem); color: rgba(243,242,237,0.70);
+  }
+  .wib-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  @media (max-width: 860px) {
+    #why { padding: 64px 0 72px; }
+    .why-box { margin-top: 40px; }
+    .why-item { grid-template-columns: 1fr; gap: 26px; padding: 34px 26px; }
+    .why-item--rev .why-stage { order: 0; }
+    .why-item--rev .why-item-body { order: 0; }
+  }
+</style>
+
+<!-- ════════════════════════════════ CTA ════════════════════════════════ -->
+<section id="cta">
+  <div class="container">
+    <div class="cta-card">
+      <div class="cta-grid-overlay" aria-hidden="true"></div>
+      <p class="cta-eyebrow"><span class="dot"></span>Next Step</p>
+      <h2 class="cta-title">See your organization the way<br><span class="cta-mark">an attacker does.</span></h2>
+      <p class="cta-sub">Scope a red team engagement, a continuous pentest, or a one-time assessment — we'll show you what's actually exposed.</p>
+      <div class="cta-actions">
+        <a href="/contact" class="btn-primary cta-btn-main">Speak to Sales</a>
+        <a href="/engagement-models" class="btn-ghost cta-btn-ghost">Explore Engagement Models</a>
+      </div>
+      <p class="cta-note">Typical response within one business day · NDA on request</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ FOOTER ═══════════════════════════════ -->
+<footer id="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="footer-logo" href="/" aria-label="Avadh Security home">
+          <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M50 10L85 65H15L50 10Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+            <path d="M50 35L70 65H30L50 35Z" fill="#E4682A"/>
+            <path d="M20 75L50 95L80 75L50 60L20 75Z" stroke="#E4682A" stroke-width="8" stroke-linejoin="round"/>
+          </svg>
+          <span>AVADH <em>SECURITY</em></span>
+        </a>
+        <p class="footer-tag">Offensive security for teams that want to stop attackers, not collect certificates.</p>
+      </div>
+      <div class="footer-cols" role="navigation" aria-label="Footer">
+        <div class="footer-col">
+          <h3>Pentest</h3>
+          <a href="/pentest/web">Web Application</a>
+          <a href="/pentest/network">Network</a>
+          <a href="/pentest/mobile">Mobile</a>
+          <a href="/pentest/cloud">Cloud</a>
+          <a href="/pentest/ai">AI &amp; LLM</a>
+        </div>
+        <div class="footer-col">
+          <h3>Company</h3>
+          <a href="/engagement-models">Engagement Models</a>
+          <a href="/pricing">Pricing</a>
+          <a href="/resources">Resources</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <div class="footer-col">
+          <h3>Get in touch</h3>
+          <a href="mailto:hello@avadhsec.com">hello@avadhsec.com</a>
+          <a href="/contact">Book an intro call</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Avadh Security. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  /* ═══ CTA ═══ */
+  #cta { padding: 104px 0; }
+  .cta-card {
+    position: relative;
+    background: #101A24;
+    border-radius: 28px;
+    padding: clamp(56px, 8vw, 88px) clamp(28px, 6vw, 80px);
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(16,26,36,0.22);
+  }
+  .cta-grid-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(243,242,237,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(243,242,237,0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 35%, transparent 100%);
+  }
+  .cta-card > * { position: relative; }
+  .cta-eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--mono); font-size: 0.78rem; font-weight: 500;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--salmon);
+    margin-bottom: 20px;
+  }
+  .cta-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); }
+  .cta-title {
+    font-family: var(--head); font-weight: 700; letter-spacing: -0.01em;
+    font-size: clamp(2.1rem, 4.6vw, 3.2rem); line-height: 1.12;
+    color: #F3F2ED; margin: 0 0 18px;
+  }
+  .cta-mark { color: var(--red); }
+  .cta-sub {
+    font-family: var(--body); font-size: clamp(1rem, 1.5vw, 1.13rem);
+    color: rgba(243,242,237,0.66); line-height: 1.6;
+    max-width: 640px; margin: 0 auto 34px;
+  }
+  .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta-btn-ghost { border-color: rgba(243,242,237,0.28); color: #F3F2ED; }
+  .cta-btn-ghost:hover { border-color: var(--blue); background: rgba(143,160,216,0.12); color: #FFFFFF; }
+  .cta-note {
+    margin-top: 26px; font-family: var(--mono); font-size: 0.78rem;
+    letter-spacing: 0.04em; color: rgba(243,242,237,0.40);
+  }
+
+  /* ═══ FOOTER ═══ */
+  #site-footer {
+    background: #101A24;
+    color: rgba(243,242,237,0.66);
+    padding: 64px 0 36px;
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 1.2fr 2fr; gap: 56px;
+    padding-bottom: 44px; border-bottom: 1px solid rgba(243,242,237,0.10);
+  }
+  .footer-logo {
+    display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    font-family: var(--head); font-weight: 800; font-size: 1.25rem;
+    letter-spacing: 0.04em; color: #F3F2ED;
+  }
+  .footer-logo span { color: #F3F2ED; }
+  .footer-logo em { font-style: normal; color: var(--red); }
+  .footer-tag {
+    margin-top: 16px; font-family: var(--body); font-size: 0.95rem;
+    line-height: 1.6; color: rgba(243,242,237,0.52); max-width: 300px;
+  }
+  .footer-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .footer-col { display: flex; flex-direction: column; gap: 12px; }
+  .footer-col h3 {
+    font-family: var(--mono); font-size: 0.74rem; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--salmon); margin: 0 0 6px;
+  }
+  .footer-col a {
+    font-family: var(--body); font-size: 0.95rem; text-decoration: none;
+    color: rgba(243,242,237,0.66); transition: color 0.18s;
+  }
+  .footer-col a:hover { color: #FFFFFF; }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+    gap: 12px; padding-top: 28px;
+    font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.03em;
+    color: rgba(243,242,237,0.38);
+  }
+  .footer-bottom p { margin: 0; }
+  .footer-legal { display: flex; gap: 22px; }
+  .footer-legal a { color: rgba(243,242,237,0.38); text-decoration: none; transition: color 0.18s; }
+  .footer-legal a:hover { color: rgba(243,242,237,0.75); }
+
+  @media (max-width: 860px) {
+    #cta { padding: 72px 0; }
+    .footer-top { grid-template-columns: 1fr; gap: 40px; }
+    .footer-cols { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ═══ Scroll-reveal (subtle fade-up as content enters viewport) ═══ */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.reveal-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    #why { transition: none; }
+  }
+
+  /* ═══ Micro-polish ═══ */
+  ::selection { background: rgba(228,104,42,0.28); color: var(--text); }
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--red); outline-offset: 3px; border-radius: 4px;
+  }
+</style>
+
+<script>
+/* ── SCROLL CHOREOGRAPHY: Why-section colour transition + reveal-on-scroll ── */
+(function(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* 1. Page eases into periwinkle as #why enters the viewport (and back out) */
+  const why = document.getElementById('why');
+  if (why && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        why.classList.toggle('why-active', e.isIntersecting);
+      });
+    }, { threshold: 0.22 }).observe(why);
+  } else if (why) {
+    why.classList.add('why-active'); /* old browsers: just show the colour */
+  }
+
+  /* 2. Subtle fade-up reveals for below-the-fold content */
+  if (reduced || !('IntersectionObserver' in window)) return;
+  const targets = document.querySelectorAll(
+    '#trusted .container, #built-by .container, #offensive .container, ' +
+    '.why-head, .why-item, .cta-card, .footer-top'
+  );
+  const ro = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if (e.isIntersecting) {
+        e.target.classList.add('reveal-in');
+        ro.unobserve(e.target); /* reveal once, don't re-hide */
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  targets.forEach(function(t){ t.classList.add('reveal'); ro.observe(t); });
+})();
+</script>
+
+
+<script>
+/* ── TOP BANNER: rotate lines + dismiss ── */
+(function(){
+  const banner = document.getElementById('topBanner');
+  if (!banner) return;
+
+  // Respect a prior dismissal (persists across visits where storage is available)
+  try {
+    if (localStorage.getItem('avadhBannerDismissed') === '1') {
+      document.body.classList.add('banner-dismissed');
+      banner.setAttribute('aria-hidden', 'true');
+      return;
+    }
+  } catch (e) { /* storage blocked — banner just shows every visit */ }
+
+  // Rotate through the announcement lines
+  const msgs = banner.querySelectorAll('.banner-msg');
+  if (msgs.length > 1) {
+    let i = 0;
+    setInterval(() => {
+      msgs[i].classList.remove('active');
+      i = (i + 1) % msgs.length;
+      msgs[i].classList.add('active');
+    }, 4500);
+  }
+
+  // Dismiss
+  const closeBtn = document.getElementById('bannerClose');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      document.body.classList.add('banner-dismissed');
+      banner.setAttribute('aria-hidden', 'true');
+      try { localStorage.setItem('avadhBannerDismissed', '1'); } catch (e) {}
+    });
+  }
+})();
+
+/* ── SPEC ROTATE (slot slide) ── */
+(function(){
+  const words = document.querySelectorAll('#specRotate .spec-word');
+  if (words.length < 2) return;
+  let cur = 0;
+  setInterval(() => {
+    const prev = words[cur];
+    cur = (cur + 1) % words.length;
+    const next = words[cur];
+
+    prev.classList.remove('active');
+    prev.classList.add('exit');         // slide current word up & out
+    next.classList.remove('exit');
+    next.classList.add('active');       // slide next word up into place
+
+    // reset the outgoing word back to its waiting position after the slide
+    setTimeout(() => prev.classList.remove('exit'), 600);
+  }, 2600);
+})();
+
+/* ── NAV: recolor to periwinkle on scroll ── */
+(function(){
+  const nav = document.querySelector('nav');
+  if (!nav) return;
+  const THRESHOLD = 24;
+  let ticking = false;
+  const apply = () => {
+    nav.classList.toggle('scrolled', window.scrollY > THRESHOLD);
+    ticking = false;
+  };
+  window.addEventListener('scroll', () => {
+    if (!ticking) { window.requestAnimationFrame(apply); ticking = true; }
+  }, { passive: true });
+  apply(); // set correct state on load (e.g. if page restores a scrolled position)
+})();
+
+/* ── SCROLL REVEAL ── */
+(function(){
+  const els = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  els.forEach(el => obs.observe(el));
+})();
+
+/* ── COUNTER ANIMATION ── */
+(function(){
+  const counters = document.querySelectorAll('[data-count]');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if(!e.isIntersecting) return;
+      const el = e.target;
+      const target = +el.dataset.count;
+      const suffix = el.dataset.suffix || '';
+      let start = 0;
+      const dur = 1600;
+      const step = dur / target;
+      const timer = setInterval(() => {
+        start++;
+        el.textContent = start + suffix;
+        if(start >= target) { clearInterval(timer); el.textContent = target + suffix; }
+      }, step);
+      obs.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => obs.observe(c));
+})();
+
+
+</script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* ── FORMSPREE AJAX CONTACT FORM ── */
+(function () {
+  const form      = document.getElementById('contactForm');
+  const btn       = document.getElementById('submitBtn');
+  const success   = document.getElementById('formSuccess');
+  const error     = document.getElementById('formError');
+  const errorMsg  = document.getElementById('formErrorMsg');
+
+  if (!form) return;
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    // Basic client-side validation
+    const required = form.querySelectorAll('[required]');
+    let valid = true;
+    required.forEach(field => {
+      field.style.borderColor = '';
+      if (!field.value.trim()) {
+        field.style.borderColor = 'rgba(240,90,26,0.75)';
+        field.style.boxShadow = '0 0 0 3px rgba(240,90,26,0.14)';
+        valid = false;
+      }
+    });
+    if (!valid) return;
+
+    // Loading state
+    btn.disabled = true;
+    btn.classList.add('loading');
+    success.classList.remove('active');
+    error.classList.remove('active');
+
+    try {
+      const data = new FormData(form);
+      const res  = await fetch(form.action, {
+        method: 'POST',
+        body: data,
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        success.classList.add('active');
+        form.reset();
+        // Scroll success message into view
+        success.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        const json = await res.json().catch(() => ({}));
+        errorMsg.textContent = (json.errors && json.errors[0] && json.errors[0].message)
+          ? json.errors[0].message
+          : 'Something went wrong. Please try again or email us directly.';
+        error.classList.add('active');
+      }
+    } catch (_) {
+      errorMsg.textContent = 'Network error. Please check your connection and try again.';
+      error.classList.add('active');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  });
+
+  // Remove field-level error highlight on input
+  form.querySelectorAll('input, textarea, select').forEach(field => {
+    field.addEventListener('input', () => {
+      field.style.borderColor = '';
+      field.style.boxShadow = '';
+    });
+  });
+})();
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Add Bootstrap tooltips to section tags and cert items
+  const tooltipTriggers = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltipTriggers.forEach(el => new bootstrap.Tooltip(el, { placement: 'top', trigger: 'hover' }));
+
+  /* ── ENGAGEMENT card entrance animation via IntersectionObserver ── */
+  const engCards = document.querySelectorAll('.eng-card');
+  const engObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }, parseInt(entry.target.dataset.delay || 0));
+        engObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  engCards.forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(28px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease, border-color 0.3s, box-shadow 0.3s';
+    card.dataset.delay = i * 90;
+    engObs.observe(card);
+  });
+
+  /* ── STAT CARD slide-in from left ── */
+  const statCards = document.querySelectorAll('.stat-card');
+  const statObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateX(0)';
+        }, i * 100);
+        statObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  statCards.forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(-24px)';
+    card.style.transition = 'opacity 0.55s ease, transform 0.55s ease, border-color 0.25s, box-shadow 0.25s';
+    statObs.observe(card);
+  });
+
+  /* ── CERT ITEMS pop-in ── */
+  const certItems = document.querySelectorAll('.cert-item');
+  const certObs = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'scale(1)';
+        }, i * 110);
+        certObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.2 });
+
+  certItems.forEach((item) => {
+    item.style.opacity = '0';
+    item.style.transform = 'scale(0.92)';
+    item.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(.22,.68,0,1.3), border-color 0.25s, box-shadow 0.25s';
+    certObs.observe(item);
+  });
+});
+</script>
+<script>
+(function(){
+  var cards = document.querySelectorAll('#offensive .svc-card');
+  if (!cards.length) return;
+  var routes = {
+    'Application Pentesting':'/pentest/web',
+    'Network Pentesting':'/pentest/network',
+    'Red Team Operations':'/engagement-models',
+    'Vulnerability Assessment':'/services/vulnerability-assessment',
+    'Threat Monitoring':'/services/threat-monitoring',
+    'Compliance Readiness':'/services/compliance-readiness'
+  };
+  cards.forEach(function(c){
+    var el=c.querySelector('.svc-title');
+    var href = el && routes[el.textContent.trim()];
+    if(href){ c.addEventListener('click', function(){ window.location.href=href; }); }
+  });
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced || !('IntersectionObserver' in window)) return;
+  cards.forEach(function(c,i){ c.classList.add('is-hidden'); c.style.transitionDelay=(i*0.09)+'s'; });
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){
+        var c=e.target;
+        c.classList.remove('is-hidden');
+        io.unobserve(c);
+        c.addEventListener('transitionend', function(){ c.style.transitionDelay='0s'; }, {once:true});
+      }
+    });
+  }, {threshold:0.14, rootMargin:'0px 0px -40px 0px'});
+  cards.forEach(function(c){ io.observe(c); });
+})();
+</script>
+</html>
